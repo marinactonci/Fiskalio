@@ -53,7 +53,7 @@ function DeleteProfileAlertDialog({ profile }: DeleteProfileAlertDialogProps) {
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the
-            profile "{profile.name}" and all associated bills and bill
+            profile &quot;{profile.name}&quot; and all associated bills and bill
             instances.
           </AlertDialogDescription>
         </AlertDialogHeader>

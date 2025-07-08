@@ -119,7 +119,7 @@ export default function BillDetails() {
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This action cannot be undone. This will permanently delete the
-                  bill "{bill.name}" and all associated bill instances.
+                  bill &quot;{bill.name}&quot; and all associated bill instances.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

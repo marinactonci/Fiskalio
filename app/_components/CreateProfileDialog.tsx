@@ -64,7 +64,7 @@ export function CreateProfileDialog() {
       toast.success("Profile created successfully!");
       form.reset();
       setOpen(false);
-    } catch (error) {
+    } catch {
       toast.error("Failed to create profile. Please try again.");
     }
   };

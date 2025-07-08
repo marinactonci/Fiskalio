@@ -8,15 +8,16 @@ import { SignUpButton } from "@clerk/nextjs";
 import { SignInButton } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { PiggyBank } from "lucide-react";
+import Link from "next/link";
 
 function Navbar() {
   return (
     <header className="h-14 border-b shadow-sm grid place-items-center">
       <div className="container mx-auto px-4 flex justify-between">
-        <div className="flex items-center gap-2">
+        <Link href={"/"} className="flex items-center gap-2">
           <PiggyBank className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-bold">Fiskalio</h1>
-        </div>
+        </Link>
         <div className="flex items-center gap-4">
           <ModeToggle />
           <Authenticated>

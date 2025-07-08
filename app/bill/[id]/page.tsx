@@ -1,66 +1,52 @@
-'use client';
+"use client";
 
-import { useMutation, useQuery } from 'convex/react';
-import { format } from 'date-fns';
+import { useMutation, useQuery } from "convex/react";
+import { format } from "date-fns";
 import {
   ArrowLeft,
   Calendar,
+  Copy,
   DollarSign,
   Edit,
+  ExternalLink,
+  Eye,
+  EyeOff,
   Globe,
+  Lock,
   Trash2,
   User,
-} from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { CreateBillInstanceDialog } from '@/app/bill/_components/CreateBillInstanceDialog';
-import { EditBillDialog } from '@/app/bill/_components/EditBillDialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
-import { BillInstanceCard } from '../_components/BillInstanceCard';
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import { CreateBillInstanceDialog } from "@/app/bill/_components/CreateBillInstanceDialog";
+import { EditBillDialog } from "@/app/bill/_components/EditBillDialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { BillInstanceCard } from "../_components/BillInstanceCard";
+import DeleteBillAlertDialog from "../_components/DeleteBillAlertDialog";
 
-export default function BillDetails() {
+export default function Bill() {
   const { id } = useParams();
   const router = useRouter();
-
-  // State management
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Queries and mutations
-  const bill = useQuery(api.bills.getBill, { id: id as Id<'bills'> });
+  const bill = useQuery(api.bills.getBill, { id: id as Id<"bills"> });
   const instances = useQuery(api.billInstances.getBillInstancesForBill, {
-    billId: id as Id<'bills'>,
+    billId: id as Id<"bills">,
   });
 
-  // Add delete bill mutation when it's created in convex/bills.ts
-  const deleteBill = useMutation(api.bills.deleteBill);
-
-  const handleDeleteBill = async () => {
-    setDeleteLoading(true);
+  const copyToClipboard = async (text: string, type: string) => {
     try {
-      await deleteBill({ id: id as Id<'bills'> });
-      toast.success('Bill deleted successfully!');
-      router.push(`/profile/${bill?.profileId}`);
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error('Failed to delete bill. Please try again.');
-      }
-    } finally {
-      setDeleteLoading(false);
+      await navigator.clipboard.writeText(text);
+      toast.success(`${type} copied to clipboard`);
+    } catch {
+      toast.error(`Failed to copy ${type.toLowerCase()}`);
     }
   };
 
@@ -72,19 +58,9 @@ export default function BillDetails() {
     );
   }
 
-  // Calculate statistics
-  const totalAmount = instances.reduce(
-    (sum: number, instance) => sum + instance.amount,
-    0
-  );
-  const paidAmount = instances
-    .filter((i) => i.isPaid)
-    .reduce((sum: number, instance) => sum + instance.amount, 0);
-  const unpaidCount = instances.filter((i) => !i.isPaid).length;
-
   return (
     <div className="space-y-8">
-      <div className="flex items-center space-x-4">
+      <div className="flex flex-col items-start space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
         <Button
           className="hover:bg-muted/50"
           onClick={() => router.push(`/profile/${bill.profileId}`)}
@@ -94,7 +70,7 @@ export default function BillDetails() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Profile
         </Button>
-        <div className="h-6 w-px bg-border" />
+        <div className="hidden h-6 w-px bg-border sm:block" />
         <div className="flex-1">
           <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text font-bold text-3xl text-transparent">
             {bill.name}
@@ -103,175 +79,159 @@ export default function BillDetails() {
         </div>
         <div className="flex space-x-2">
           <EditBillDialog bill={bill} />
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                className="hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                disabled={deleteLoading}
-                variant="destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Bill
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the
-                  bill &quot;{bill.name}&quot; and all associated bill instances.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-red-600 hover:bg-red-700"
-                  disabled={deleteLoading}
-                  onClick={handleDeleteBill}
-                >
-                  {deleteLoading ? 'Deleting...' : 'Delete Bill'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <DeleteBillAlertDialog bill={bill} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="bg-gradient-to-br from-background/80 to-muted/20 backdrop-blur-sm lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Edit className="h-5 w-5" />
-              <span>Bill Information</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {bill.eBill?.link && (
-              <div className="flex items-center space-x-3">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-sm">Website</p>
-                  <a
-                    className="block truncate text-blue-600 text-sm hover:text-blue-800"
-                    href={bill.eBill.link}
-                    rel="noopener noreferrer"
-                    target="_blank"
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {bill.eBill && (
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Globe className="h-5 w-5" />
+                <span>Details</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="ebill-link" className="text-sm font-medium">
+                  Website
+                </Label>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Input
+                    id="ebill-link"
+                    value={bill.eBill?.link || ""}
+                    readOnly
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(bill.eBill?.link, "_blank")}
                   >
-                    {bill.eBill.link}
-                  </a>
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      copyToClipboard(bill.eBill?.link || "", "Link")
+                    }
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            )}
-            {bill.eBill?.username && (
-              <div className="flex items-center space-x-3">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-sm">Username</p>
-                  <p className="text-muted-foreground text-sm">
-                    {bill.eBill.username}
-                  </p>
+
+              <div>
+                <Label htmlFor="ebill-username" className="text-sm font-medium">
+                  Username
+                </Label>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Input
+                    id="ebill-username"
+                    value={bill.eBill?.username || ""}
+                    readOnly
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      copyToClipboard(bill.eBill?.username || "", "Username")
+                    }
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            )}
-            {bill.eBill?.password && (
-              <div className="flex items-center space-x-3">
-                <div className="h-4 w-4 text-muted-foreground">🔒</div>
-                <div>
-                  <p className="font-medium text-sm">Password</p>
-                  <p className="font-mono text-muted-foreground text-sm">
-                    ••••••••
-                  </p>
+
+              <div>
+                <Label htmlFor="ebill-password" className="text-sm font-medium">
+                  Password
+                </Label>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Input
+                    id="ebill-password"
+                    type={showPassword ? "text" : "password"}
+                    value={bill.eBill?.password || ""}
+                    readOnly
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      copyToClipboard(bill.eBill?.password || "", "Password")
+                    }
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            )}
-            <div className="border-t pt-4">
-              <p className="text-muted-foreground text-xs">
-                Created {format(bill._creationTime, 'PPP')}
+            </CardContent>
+          </Card>
+        )}
+
+        <div className={bill.eBill ? "lg:col-span-2" : "lg:col-span-3"}>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">Bill Instances</h2>
+              <p className="text-muted-foreground">
+                {instances.length} instance{instances.length !== 1 ? "s" : ""}{" "}
+                found
               </p>
             </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6 lg:col-span-2">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Card className="border-blue-200/50 bg-gradient-to-br from-blue-500/10 to-blue-600/10">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-blue-700 text-sm">
-                      Total Amount
-                    </p>
-                    <p className="font-bold text-blue-900 text-xl">
-                      ${totalAmount.toFixed(2)}
-                    </p>
-                  </div>
-                  <DollarSign className="h-6 w-6 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-green-200/50 bg-gradient-to-br from-green-500/10 to-green-600/10">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-green-700 text-sm">
-                      Paid Amount
-                    </p>
-                    <p className="font-bold text-green-900 text-xl">
-                      ${paidAmount.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="h-6 w-6 text-green-600">✓</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-red-200/50 bg-gradient-to-br from-red-500/10 to-red-600/10">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-red-700 text-sm">
-                      Unpaid Bills
-                    </p>
-                    <p className="font-bold text-red-900 text-xl">
-                      {unpaidCount}
-                    </p>
-                  </div>
-                  <div className="h-6 w-6 text-red-600">⚠</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-2xl">Bill Instances</h2>
-            <CreateBillInstanceDialog billId={id as Id<'bills'>} />
+            <CreateBillInstanceDialog billId={id as Id<"bills">} />
           </div>
 
           {instances.length === 0 ? (
-            <Card className="border-2 border-muted-foreground/25 border-dashed bg-gradient-to-br from-background/50 to-muted/20 backdrop-blur-sm">
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <Calendar className="mb-4 h-16 w-16 text-muted-foreground/50" />
-                <h3 className="mb-2 font-semibold text-xl">No instances yet</h3>
-                <p className="mb-6 max-w-md text-center text-muted-foreground">
-                  Add your first bill instance to start tracking monthly
-                  payments
-                </p>
-                <CreateBillInstanceDialog billId={id as Id<'bills'>} />
-              </CardContent>
+            <Card className="p-12 text-center">
+              <div className="space-y-4">
+                <DollarSign className="h-12 w-12 mx-auto text-muted-foreground" />
+                <div>
+                  <h3 className="text-lg font-medium">No bill instances yet</h3>
+                  <p className="text-muted-foreground">
+                    Create your first bill instance to get started.
+                  </p>
+                </div>
+                <CreateBillInstanceDialog billId={id as Id<"bills">} />
+              </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {instances
-                .sort(
-                  (a, b) =>
-                    new Date(b.dueDate).getTime() -
-                    new Date(a.dueDate).getTime()
-                )
+                .sort((a, b) => {
+                  // Sort by status: overdue first, then pending, then paid
+                  const aOverdue = new Date(a.dueDate) < new Date();
+                  const bOverdue = new Date(b.dueDate) < new Date();
+
+                  if (aOverdue && !bOverdue) return -1;
+                  if (!aOverdue && bOverdue) return 1;
+                  if (!a.isPaid && b.isPaid) return -1;
+                  if (a.isPaid && !b.isPaid) return 1;
+
+                  // Then by due date
+                  return (
+                    new Date(a.dueDate).getTime() -
+                    new Date(b.dueDate).getTime()
+                  );
+                })
                 .map((instance) => (
                   <BillInstanceCard
-                    billInstance={instance}
                     key={instance._id}
+                    billInstance={instance}
                   />
                 ))}
             </div>

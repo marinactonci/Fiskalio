@@ -1,27 +1,32 @@
-import { useMutation } from 'convex/react';
-import { format } from 'date-fns';
-import { Calendar, Check, DollarSign, X } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { api } from '@/convex/_generated/api';
-import type { BillInstance } from '@/convex/schema';
-import { EditBillInstanceDialog } from './EditBillInstanceDialog';
+import { useMutation } from "convex/react";
+import { format } from "date-fns";
+import {
+  AlertTriangle,
+  Calendar,
+  CalendarClock,
+  Check,
+  CheckCircle,
+  Clock,
+  NotebookTabs,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { api } from "@/convex/_generated/api";
+import type { BillInstance } from "@/convex/schema";
+import { EditBillInstanceDialog } from "./EditBillInstanceDialog";
 
 interface BillInstanceCardProps {
   billInstance: BillInstance;
-  onInstanceUpdated?: () => void;
 }
 
-export function BillInstanceCard({
-  billInstance,
-  onInstanceUpdated,
-}: BillInstanceCardProps) {
+export function BillInstanceCard({ billInstance }: BillInstanceCardProps) {
   const [loading, setLoading] = useState(false);
   const togglePaidStatus = useMutation(
-    api.billInstances.toggleBillInstancePaidStatus
+    api.billInstances.toggleBillInstancePaidStatus,
   );
 
   const isOverdue = new Date(billInstance.dueDate) < new Date();
@@ -32,55 +37,44 @@ export function BillInstanceCard({
       await togglePaidStatus({ id: billInstance._id });
       toast.success(
         billInstance.isPaid
-          ? 'Bill instance marked as unpaid'
-          : 'Bill instance marked as paid'
+          ? "Bill instance marked as unpaid"
+          : "Bill instance marked as paid",
       );
-      onInstanceUpdated?.();
     } catch {
-      toast.error('Failed to update bill instance status');
+      toast.error("Failed to update bill instance status");
     } finally {
       setLoading(false);
     }
   };
 
-  const getCardStyles = () => {
-    if (billInstance.isPaid) {
-      return 'border-green-200/50 bg-gradient-to-br from-green-50/50 to-green-100/50';
-    }
-    if (isOverdue) {
-      return 'border-red-200/50 bg-gradient-to-br from-red-50/50 to-red-100/50';
-    }
-    return 'border-yellow-200/50 bg-gradient-to-br from-yellow-50/50 to-yellow-100/50';
-  };
-
   const getBadgeStyles = () => {
     if (billInstance.isPaid) {
-      return 'border-green-200 bg-green-100 text-green-800';
+      return "border-green-200 bg-green-50 text-green-700";
     }
     if (isOverdue) {
-      return 'border-red-200 bg-red-100 text-red-800';
+      return "border-red-200 bg-red-50 text-red-700";
     }
-    return 'border-yellow-200 bg-yellow-100 text-yellow-800';
+    return "border-amber-200 bg-amber-50 text-amber-700";
   };
 
-  const getBadgeVariant = () => {
+  const getStatusIcon = () => {
     if (billInstance.isPaid) {
-      return 'default';
+      return <CheckCircle className="h-3 w-3" />;
     }
     if (isOverdue) {
-      return 'destructive';
+      return <AlertTriangle className="h-3 w-3" />;
     }
-    return 'secondary';
+    return <Clock className="h-3 w-3" />;
   };
 
   const getBadgeText = () => {
     if (billInstance.isPaid) {
-      return 'Paid';
+      return "Paid";
     }
     if (isOverdue) {
-      return 'Overdue';
+      return "Overdue";
     }
-    return 'Pending';
+    return "Pending";
   };
 
   const getButtonText = () => {
@@ -107,31 +101,31 @@ export function BillInstanceCard({
   };
 
   return (
-    <Card
-      className={`group transition-all duration-300 hover:shadow-lg ${getCardStyles()}`}
-    >
+    <Card className="border hover:shadow-md transition-shadow duration-200">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <CardTitle className="flex items-center space-x-2 text-lg">
-            <DollarSign className="h-5 w-5" />
-            <span>${billInstance.amount.toFixed(2)}</span>
+            <NotebookTabs className="h-5 w-5 text-muted-foreground" />
+            <span>€{billInstance.amount.toFixed(2)}</span>
           </CardTitle>
-          <div className="flex items-center space-x-2">
-            <Badge className={getBadgeStyles()} variant={getBadgeVariant()}>
-              {getBadgeText()}
-            </Badge>
-          </div>
+          <Badge className={getBadgeStyles()} variant={"outline"}>
+            <div className="flex items-center space-x-1">
+              {getStatusIcon()}
+              <span>{getBadgeText()}</span>
+            </div>
+          </Badge>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           <div className="flex items-center space-x-2 text-muted-foreground text-sm">
-            <Calendar className="h-4 w-4" />
-            <span>Due: {format(billInstance.dueDate, 'PPP')}</span>
+            <CalendarClock className="h-4 w-4" />
+            <span>Due: {format(billInstance.dueDate, "PPP")}</span>
           </div>
 
-          <div className="text-sm">
-            <span className="font-medium">{billInstance.month}</span>
+          <div className="flex items-center space-x-2 text-muted-foreground text-sm">
+            <Calendar className="h-4 w-4" />
+            <span>Month: {format(billInstance.month, "MMMM yyyy")}</span>
           </div>
 
           {billInstance.description && (
@@ -140,22 +134,19 @@ export function BillInstanceCard({
             </p>
           )}
 
-          <div className="flex items-center justify-between border-muted/20 border-t pt-2">
-            <EditBillInstanceDialog
-              billInstance={billInstance}
-              onInstanceUpdated={onInstanceUpdated}
-            />
+          <div className="flex items-center justify-between border-t pt-3">
+            <EditBillInstanceDialog billInstance={billInstance} />
 
             <Button
               className={
                 billInstance.isPaid
-                  ? 'hover:border-red-200 hover:bg-red-50 hover:text-red-700'
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                  ? "hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                  : "bg-green-600 text-white hover:bg-green-700"
               }
               disabled={loading}
               onClick={handleTogglePaidStatus}
               size="sm"
-              variant={billInstance.isPaid ? 'outline' : 'default'}
+              variant={billInstance.isPaid ? "outline" : "default"}
             >
               {getButtonText()}
             </Button>

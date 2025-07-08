@@ -1,12 +1,12 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from 'convex/react';
-import { CalendarIcon, Edit } from 'lucide-react';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "convex/react";
+import { CalendarIcon, Edit } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -23,23 +23,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { MonthPicker } from '@/components/ui/monthpicker';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { MonthPicker } from "@/components/ui/monthpicker";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Textarea } from '@/components/ui/textarea';
-import { api } from '@/convex/_generated/api';
-import type { BillInstance } from '@/convex/schema';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import { api } from "@/convex/_generated/api";
+import type { BillInstance } from "@/convex/schema";
+import { cn } from "@/lib/utils";
 
 const billInstanceSchema = z.object({
-  month: z.date({ required_error: 'Month is required' }),
-  amount: z.number().min(0.01, 'Amount must be greater than 0'),
-  dueDate: z.date({ required_error: 'Due date is required' }),
+  month: z.date({ required_error: "Month is required" }),
+  amount: z.number().min(0.01, "Amount must be greater than 0"),
+  dueDate: z.date({ required_error: "Due date is required" }),
   description: z.string().optional(),
 });
 
@@ -47,12 +47,10 @@ type BillInstanceFormValues = z.infer<typeof billInstanceSchema>;
 
 interface EditBillInstanceDialogProps {
   billInstance: BillInstance;
-  onInstanceUpdated?: () => void;
 }
 
 export function EditBillInstanceDialog({
   billInstance,
-  onInstanceUpdated,
 }: EditBillInstanceDialogProps) {
   const [open, setOpen] = useState(false);
   const updateBillInstance = useMutation(api.billInstances.updateBillInstance);
@@ -63,7 +61,7 @@ export function EditBillInstanceDialog({
       month: new Date(billInstance.month),
       amount: billInstance.amount,
       dueDate: new Date(billInstance.dueDate),
-      description: billInstance.description || '',
+      description: billInstance.description || "",
     },
   });
 
@@ -71,19 +69,18 @@ export function EditBillInstanceDialog({
     try {
       await updateBillInstance({
         id: billInstance._id,
-        month: values.month.toLocaleDateString('en-US', {
-          month: 'long',
-          year: 'numeric',
+        month: values.month.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
         }),
         amount: values.amount,
-        dueDate: values.dueDate.toISOString().split('T')[0],
+        dueDate: values.dueDate.toISOString().split("T")[0],
         description: values.description,
       });
-      toast.success('Bill instance updated successfully!');
+      toast.success("Bill instance updated successfully!");
       setOpen(false);
-      onInstanceUpdated?.();
     } catch {
-      toast.error('Failed to update bill instance. Please try again.');
+      toast.error("Failed to update bill instance. Please try again.");
     }
   };
 
@@ -117,17 +114,17 @@ export function EditBillInstanceDialog({
                       <PopoverTrigger asChild>
                         <Button
                           className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground'
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground",
                           )}
                           type="button"
                           variant="outline"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {field.value ? (
-                            field.value.toLocaleDateString('en-US', {
-                              month: 'long',
-                              year: 'numeric',
+                            field.value.toLocaleDateString("en-US", {
+                              month: "long",
+                              year: "numeric",
                             })
                           ) : (
                             <span>Select month</span>
@@ -180,8 +177,8 @@ export function EditBillInstanceDialog({
                       <PopoverTrigger asChild>
                         <Button
                           className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground'
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground",
                           )}
                           type="button"
                           variant="outline"
@@ -241,8 +238,8 @@ export function EditBillInstanceDialog({
                 type="submit"
               >
                 {form.formState.isSubmitting
-                  ? 'Updating...'
-                  : 'Update Instance'}
+                  ? "Updating..."
+                  : "Update Instance"}
               </Button>
             </DialogFooter>
           </form>

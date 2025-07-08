@@ -1,20 +1,14 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
-import { format } from "date-fns";
+import { useQuery } from "convex/react";
 import {
   ArrowLeft,
-  Calendar,
   Copy,
   DollarSign,
-  Edit,
   ExternalLink,
   Eye,
   EyeOff,
   Globe,
-  Lock,
-  Trash2,
-  User,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";

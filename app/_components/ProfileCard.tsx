@@ -26,7 +26,7 @@ function ProfileCard({ profile }: ProfileCardProps) {
                 </CardTitle>
                 <div
                   className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600"
-                  style={{ backgroundColor: profile.color || '#3b82f6' }}
+                  style={{ backgroundColor: profile.color || "#3b82f6" }}
                   title="Profile color"
                 />
               </div>

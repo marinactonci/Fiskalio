@@ -16,7 +16,7 @@ function Navbar() {
   const pathname = usePathname();
 
   const links = [
-    { href: "/", label: "Home" },
+    { href: "/", label: "Home", isActive: pathname === "/" },
     {
       href: "/calendar",
       label: "Calendar",

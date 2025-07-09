@@ -1,49 +1,28 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import {
-  ArrowLeft,
-  Copy,
-  DollarSign,
-  ExternalLink,
-  Eye,
-  EyeOff,
-  Globe,
-} from "lucide-react";
+import { ArrowLeft, DollarSign } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
 import { CreateBillInstanceDialog } from "@/app/bill/_components/CreateBillInstanceDialog";
 import { EditBillDialog } from "@/app/bill/_components/EditBillDialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { BillInstanceCard } from "../_components/BillInstanceCard";
 import { BillDashboard } from "../_components/BillDashboard";
 import DeleteBillAlertDialog from "../_components/DeleteBillAlertDialog";
+import EBillCard from "../_components/EBillCard";
 
 export default function Bill() {
   const { id } = useParams();
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
 
   // Queries and mutations
   const bill = useQuery(api.bills.getBill, { id: id as Id<"bills"> });
   const instances = useQuery(api.billInstances.getBillInstancesForBill, {
     billId: id as Id<"bills">,
   });
-
-  const copyToClipboard = async (text: string, type: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success(`${type} copied to clipboard`);
-    } catch {
-      toast.error(`Failed to copy ${type.toLowerCase()}`);
-    }
-  };
 
   if (!(bill && instances)) {
     return (
@@ -81,105 +60,7 @@ export default function Bill() {
       <BillDashboard instances={instances} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {bill.eBill && (
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Globe className="h-5 w-5" />
-                <span>Details</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="ebill-link" className="text-sm font-medium">
-                  Website
-                </Label>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Input
-                    id="ebill-link"
-                    value={bill.eBill?.link || ""}
-                    readOnly
-                    className="flex-1"
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => window.open(bill.eBill?.link, "_blank")}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      copyToClipboard(bill.eBill?.link || "", "Link")
-                    }
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="ebill-username" className="text-sm font-medium">
-                  Username
-                </Label>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Input
-                    id="ebill-username"
-                    value={bill.eBill?.username || ""}
-                    readOnly
-                    className="flex-1"
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      copyToClipboard(bill.eBill?.username || "", "Username")
-                    }
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="ebill-password" className="text-sm font-medium">
-                  Password
-                </Label>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Input
-                    id="ebill-password"
-                    type={showPassword ? "text" : "password"}
-                    value={bill.eBill?.password || ""}
-                    readOnly
-                    className="flex-1"
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      copyToClipboard(bill.eBill?.password || "", "Password")
-                    }
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {bill.eBill && <EBillCard eBill={bill.eBill} />}
 
         <div className={bill.eBill ? "lg:col-span-2" : "lg:col-span-3"}>
           <div className="flex items-center justify-between mb-6">

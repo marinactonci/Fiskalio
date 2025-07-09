@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 
 export const createBillInstance = mutation({
   args: {
@@ -198,7 +198,7 @@ export const getAllBillInstancesWithBillNames = query({
     profiles.forEach((profile) => {
       profileInfoMap.set(profile._id, {
         name: profile.name,
-        color: profile.color || '#3b82f6',
+        color: profile.color || "#3b82f6",
       });
     });
 
@@ -234,7 +234,7 @@ export const getBillInstancesByMonth = query({
     const billInstances = await ctx.db
       .query("billInstances")
       .withIndex("by_month_user", (q) =>
-        q.eq("month", args.month).eq("userId", identity.tokenIdentifier)
+        q.eq("month", args.month).eq("userId", identity.tokenIdentifier),
       )
       .collect();
 
@@ -300,7 +300,7 @@ export const getBillInstancesWithBillNamesByProfile = query({
       .collect();
 
     // Get all bill instances for these bills
-    const billIds = bills.map(bill => bill._id);
+    const billIds = bills.map((bill) => bill._id);
     const allBillInstances = [];
 
     for (const billId of billIds) {
@@ -333,5 +333,51 @@ export const getBillInstancesWithBillNamesByProfile = query({
         profileId: args.profileId,
       };
     });
+  },
+});
+
+export const generateMonthlyBillInstances = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+    // Get all users
+    const allBills = await ctx.db.query("bills").collect();
+
+    // Group bills by user
+    const billsByUser = new Map();
+    allBills.forEach((bill) => {
+      if (!billsByUser.has(bill.userId)) {
+        billsByUser.set(bill.userId, []);
+      }
+      billsByUser.get(bill.userId).push(bill);
+    });
+
+    // For each user, create bill instances for the current month
+    for (const [userId, userBills] of billsByUser) {
+      for (const bill of userBills) {
+        // Check if instance already exists for current month
+        const existingInstance = await ctx.db
+          .query("billInstances")
+          .withIndex("by_bill", (q) => q.eq("billId", bill._id))
+          .filter((q) => q.eq(q.field("month"), currentMonth))
+          .filter((q) => q.eq(q.field("userId"), userId))
+          .first();
+
+        if (!existingInstance) {
+          // Create new bill instance
+          await ctx.db.insert("billInstances", {
+            billId: bill._id,
+            month: currentMonth,
+            amount: bill.amount || 0,
+            dueDate: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(bill.dueDay || 1).padStart(2, "0")}`,
+            description: `Monthly instance for ${bill.name}`,
+            isPaid: false,
+            userId: userId,
+          });
+        }
+      }
+    }
   },
 });

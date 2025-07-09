@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import type { BillInstance } from "@/convex/schema";
 import { EditBillInstanceDialog } from "./EditBillInstanceDialog";
+import DeleteBillInstanceAlertDialog from "./DeleteBillInstanceAlertDialog";
 
 interface BillInstanceCardProps {
   billInstance: BillInstance;
@@ -135,7 +136,10 @@ export function BillInstanceCard({ billInstance }: BillInstanceCardProps) {
           )}
 
           <div className="flex items-center justify-between border-t pt-3">
-            <EditBillInstanceDialog billInstance={billInstance} />
+            <div className="flex items-center space-x-2">
+              <EditBillInstanceDialog billInstance={billInstance} />
+              <DeleteBillInstanceAlertDialog billInstance={billInstance} />
+            </div>
 
             <Button
               className={

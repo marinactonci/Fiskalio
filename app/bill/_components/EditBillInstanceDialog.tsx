@@ -88,7 +88,7 @@ export function EditBillInstanceDialog({
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button className="hover:bg-muted/50" size="sm" variant="ghost">
+        <Button className="hover:bg-muted/50" size="sm" variant="outline">
           <Edit className="mr-1 h-4 w-4" />
           Edit
         </Button>

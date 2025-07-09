@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { BillInstanceCard } from "../_components/BillInstanceCard";
+import { BillDashboard } from "../_components/BillDashboard";
 import DeleteBillAlertDialog from "../_components/DeleteBillAlertDialog";
 
 export default function Bill() {
@@ -76,6 +77,8 @@ export default function Bill() {
           <DeleteBillAlertDialog bill={bill} />
         </div>
       </div>
+
+      <BillDashboard instances={instances} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {bill.eBill && (

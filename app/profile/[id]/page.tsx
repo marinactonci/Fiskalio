@@ -10,6 +10,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import BillCard from "../_components/BillCard";
+import { ProfileDashboard } from "../_components/ProfileDashboard";
 import CreateBillDialog from "../_components/CreateBillDialog";
 import DeleteProfileAlertDialog from "../_components/DeleteProfileAlertDialog";
 import UpdateProfileDialog from "../_components/UpdateProfileDialog";
@@ -80,7 +81,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div></div>
+      <ProfileDashboard profileId={id as Id<"profiles">} bills={bills || []} />
 
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-2xl">Bills</h2>

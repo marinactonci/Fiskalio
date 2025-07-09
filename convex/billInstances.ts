@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { format } from "date-fns";
 
 export const createBillInstance = mutation({
   args: {
@@ -340,7 +341,18 @@ export const generateMonthlyBillInstances = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+    // Bill instances are for the PREVIOUS month
+    const previousMonthDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      1,
+    );
+    const billMonth = `${previousMonthDate.getFullYear()}-${String(previousMonthDate.getMonth() + 1).padStart(2, "0")}`;
+
+    // Due date is in the CURRENT month
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
 
     // Get all users
     const allBills = await ctx.db.query("bills").collect();
@@ -354,14 +366,14 @@ export const generateMonthlyBillInstances = internalMutation({
       billsByUser.get(bill.userId).push(bill);
     });
 
-    // For each user, create bill instances for the current month
+    // For each user, create bill instances for the previous month
     for (const [userId, userBills] of billsByUser) {
       for (const bill of userBills) {
-        // Check if instance already exists for current month
+        // Check if instance already exists for the previous month
         const existingInstance = await ctx.db
           .query("billInstances")
           .withIndex("by_bill", (q) => q.eq("billId", bill._id))
-          .filter((q) => q.eq(q.field("month"), currentMonth))
+          .filter((q) => q.eq(q.field("month"), billMonth))
           .filter((q) => q.eq(q.field("userId"), userId))
           .first();
 
@@ -369,10 +381,10 @@ export const generateMonthlyBillInstances = internalMutation({
           // Create new bill instance
           await ctx.db.insert("billInstances", {
             billId: bill._id,
-            month: currentMonth,
+            month: billMonth,
             amount: bill.amount || 0,
-            dueDate: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(bill.dueDay || 1).padStart(2, "0")}`,
-            description: `Monthly instance for ${bill.name}`,
+            dueDate: `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(bill.dueDay || 1).padStart(2, "0")}`,
+            description: `${bill.name}'s monthly instance for ${format(previousMonthDate, "MMMM yyyy")}`,
             isPaid: false,
             userId: userId,
           });

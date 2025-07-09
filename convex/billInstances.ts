@@ -157,3 +157,75 @@ export const getBillInstancesForBill = query({
     return billInstances;
   },
 });
+
+export const getAllBillInstancesWithBillNames = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("User not authenticated");
+    }
+
+    // Get all bill instances for the user
+    const billInstances = await ctx.db
+      .query("billInstances")
+      .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+      .collect();
+
+    // Get all bills for the user to create a lookup map
+    const bills = await ctx.db
+      .query("bills")
+      .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+      .collect();
+
+    // Create a map of billId to bill name
+    const billNameMap = new Map();
+    bills.forEach((bill) => {
+      billNameMap.set(bill._id, bill.name);
+    });
+
+    // Combine bill instances with bill names
+    return billInstances.map((instance) => ({
+      ...instance,
+      billName: billNameMap.get(instance.billId) || "Unknown Bill",
+    }));
+  },
+});
+
+export const getBillInstancesByMonth = query({
+  args: {
+    month: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("User not authenticated");
+    }
+
+    const billInstances = await ctx.db
+      .query("billInstances")
+      .withIndex("by_month_user", (q) =>
+        q.eq("month", args.month).eq("userId", identity.tokenIdentifier)
+      )
+      .collect();
+
+    // Get all bills for the user to create a lookup map
+    const bills = await ctx.db
+      .query("bills")
+      .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+      .collect();
+
+    // Create a map of billId to bill name
+    const billNameMap = new Map();
+    bills.forEach((bill) => {
+      billNameMap.set(bill._id, bill.name);
+    });
+
+    // Combine bill instances with bill names
+    return billInstances.map((instance) => ({
+      ...instance,
+      billName: billNameMap.get(instance.billId) || "Unknown Bill",
+    }));
+  },
+});

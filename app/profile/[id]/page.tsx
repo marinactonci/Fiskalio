@@ -1,13 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import {
-  ArrowLeft,
-  Calendar,
-  FileText,
-  MapPin,
-  Plus,
-} from "lucide-react";
+import { ArrowLeft, Calendar, FileText, MapPin, Plus } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -19,6 +13,7 @@ import BillCard from "../_components/BillCard";
 import CreateBillDialog from "../_components/CreateBillDialog";
 import DeleteProfileAlertDialog from "../_components/DeleteProfileAlertDialog";
 import UpdateProfileDialog from "../_components/UpdateProfileDialog";
+import ColorPicker from "../_components/ColorPicker";
 
 export default function Profile() {
   const { id } = useParams();
@@ -58,9 +53,17 @@ export default function Profile() {
         </Link>
         <div className="hidden h-6 w-px bg-border sm:block" />
         <div className="flex-1">
-          <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text font-bold text-2xl text-transparent sm:text-3xl">
-            {profile.name}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text font-bold text-2xl text-transparent sm:text-3xl">
+              {profile.name}
+            </h1>
+            <div
+              className="w-6 h-6 rounded-full border-2 border-gray-300"
+              style={{ backgroundColor: profile.color || '#3b82f6' }}
+              title="Profile color"
+            />
+            <ColorPicker profile={profile} />
+          </div>
           <div className="mt-1 flex flex-col space-y-1 text-muted-foreground sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0">
             <div className="flex items-center space-x-2">
               <MapPin className="h-4 w-4" />
@@ -82,13 +85,18 @@ export default function Profile() {
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-2xl">Bills</h2>
         <div className="flex space-x-3">
-          <Link href={`/profile/${profile._id}/calendar`}>
+          <Link href={`/calendar?profileId=${profile._id}`}>
             <Button className="hover:bg-muted/50" variant="outline">
               <Calendar className="mr-2 h-4 w-4" />
-              View Calendar
+              View in Calendar
             </Button>
           </Link>
-          <CreateBillDialog profileId={id as Id<"profiles">} />
+          {bills && bills.length > 0 && (
+            <CreateBillDialog
+              text="Add New Bill"
+              profileId={id as Id<"profiles">}
+            />
+          )}
         </div>
       </div>
 
@@ -100,10 +108,10 @@ export default function Profile() {
             <p className="mb-6 max-w-md text-center text-muted-foreground">
               Add your first bill to start tracking monthly instances
             </p>
-            <Button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Your First Bill
-            </Button>
+            <CreateBillDialog
+              text="Add Your First Bill"
+              profileId={id as Id<"profiles">}
+            />
           </CardContent>
         </Card>
       ) : (

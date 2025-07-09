@@ -10,6 +10,7 @@ const schema = defineSchema({
       city: v.string(),
       country: v.string(),
     }),
+    color: v.string(),
     userId: v.string(),
     billCount: v.number(),
   }).index("by_userId", ["userId"]),

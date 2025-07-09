@@ -33,6 +33,7 @@ const profileSchema = z.object({
   streetAddress: z.string().min(1, "Street address is required"),
   city: z.string().min(1, "City is required"),
   country: z.string().min(1, "Country is required"),
+  color: z.string().min(1, "Color is required"),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -48,6 +49,7 @@ export function CreateProfileDialog() {
       streetAddress: "",
       city: "",
       country: "",
+      color: "#3b82f6", // Default blue color
     },
   });
 
@@ -60,6 +62,7 @@ export function CreateProfileDialog() {
           city: values.city,
           country: values.country,
         },
+        color: values.color,
       });
       toast.success("Profile created successfully!");
       form.reset();
@@ -99,6 +102,46 @@ export function CreateProfileDialog() {
                       placeholder="e.g., Main House, Rental Property"
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="color"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Profile Color</FormLabel>
+                  <FormControl>
+                    <div className="flex gap-2 flex-wrap">
+                      {[
+                        { value: "#3b82f6", name: "Blue" },
+                        { value: "#10b981", name: "Green" },
+                        { value: "#f59e0b", name: "Orange" },
+                        { value: "#ef4444", name: "Red" },
+                        { value: "#8b5cf6", name: "Purple" },
+                        { value: "#06b6d4", name: "Cyan" },
+                        { value: "#84cc16", name: "Lime" },
+                        { value: "#f97316", name: "Amber" },
+                        { value: "#ec4899", name: "Pink" },
+                        { value: "#6366f1", name: "Indigo" },
+                      ].map((color) => (
+                        <button
+                          key={color.value}
+                          type="button"
+                          onClick={() => field.onChange(color.value)}
+                          className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                            field.value === color.value
+                              ? "border-gray-900 ring-2 ring-gray-900/20"
+                              : "border-gray-300"
+                          }`}
+                          style={{ backgroundColor: color.value }}
+                          title={color.name}
+                        />
+                      ))}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

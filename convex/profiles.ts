@@ -9,6 +9,7 @@ export const createProfile = mutation({
       city: v.string(),
       country: v.string(),
     }),
+    color: v.string(),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -20,6 +21,7 @@ export const createProfile = mutation({
     const profile = {
       name: args.name,
       address: args.address,
+      color: args.color,
       userId: identity.tokenIdentifier,
       billCount: 0,
     };
@@ -80,6 +82,7 @@ export const updateProfile = mutation({
         country: v.string(),
       }),
     ),
+    color: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -102,6 +105,37 @@ export const updateProfile = mutation({
       ...profile,
       name: args.name ?? profile.name,
       address: args.address ?? profile.address,
+      color: args.color ?? profile.color,
+    });
+
+    return updatedProfile;
+  },
+});
+
+export const updateProfileColor = mutation({
+  args: {
+    id: v.id("profiles"),
+    color: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("User not authenticated");
+    }
+
+    const profile = await ctx.db.get(args.id);
+
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    if (profile.userId !== identity.tokenIdentifier) {
+      throw new Error("Unauthorized to update this profile");
+    }
+
+    const updatedProfile = await ctx.db.patch(args.id, {
+      color: args.color,
     });
 
     return updatedProfile;

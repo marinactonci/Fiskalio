@@ -1,11 +1,11 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from 'convex/react';
-import { Plus } from 'lucide-react';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "convex/react";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -22,18 +22,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 const billSchema = z.object({
-  name: z.string().min(1, 'Bill name is required'),
+  name: z.string().min(1, "Bill name is required"),
   website: z
     .string()
-    .url('Please enter a valid URL')
+    .url("Please enter a valid URL")
     .optional()
-    .or(z.literal('')),
+    .or(z.literal("")),
   username: z.string().optional(),
   password: z.string().optional(),
 });
@@ -41,20 +41,21 @@ const billSchema = z.object({
 type BillFormValues = z.infer<typeof billSchema>;
 
 interface CreateBillDialogProps {
-  profileId: Id<'profiles'>;
+  text: string;
+  profileId: Id<"profiles">;
 }
 
-function CreateBillDialog({ profileId }: CreateBillDialogProps) {
+function CreateBillDialog({ text, profileId }: CreateBillDialogProps) {
   const [open, setOpen] = useState(false);
   const createBill = useMutation(api.bills.createBillForProfile);
 
   const form = useForm<BillFormValues>({
     resolver: zodResolver(billSchema),
     defaultValues: {
-      name: '',
-      website: '',
-      username: '',
-      password: '',
+      name: "",
+      website: "",
+      username: "",
+      password: "",
     },
   });
 
@@ -63,9 +64,9 @@ function CreateBillDialog({ profileId }: CreateBillDialogProps) {
       const eBillData =
         values.website || values.username || values.password
           ? {
-              link: values.website || '',
-              username: values.username || '',
-              password: values.password || '',
+              link: values.website || "",
+              username: values.username || "",
+              password: values.password || "",
             }
           : undefined;
 
@@ -75,11 +76,11 @@ function CreateBillDialog({ profileId }: CreateBillDialogProps) {
         eBill: eBillData,
       });
 
-      toast.success('Bill created successfully!');
+      toast.success("Bill created successfully!");
       form.reset();
       setOpen(false);
     } catch {
-      toast.error('Failed to create bill. Please try again.');
+      toast.error("Failed to create bill. Please try again.");
     }
   };
 
@@ -88,7 +89,7 @@ function CreateBillDialog({ profileId }: CreateBillDialogProps) {
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700">
           <Plus className="mr-2 h-4 w-4" />
-          Add New Bill
+          {text}
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-background/95 backdrop-blur-sm sm:max-w-[425px]">
@@ -185,7 +186,7 @@ function CreateBillDialog({ profileId }: CreateBillDialogProps) {
                 disabled={form.formState.isSubmitting}
                 type="submit"
               >
-                {form.formState.isSubmitting ? 'Creating...' : 'Create Bill'}
+                {form.formState.isSubmitting ? "Creating..." : "Create Bill"}
               </Button>
             </DialogFooter>
           </form>

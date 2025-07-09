@@ -13,10 +13,11 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { BillInstance } from "@/convex/schema";
 import { QuickEditInstanceDialog } from "./QuickEditBillInstanceDialog";
+import CalendarGridBillInstanceItem from "./CalendarGridBillInstanceItem";
 
 interface CalendarGridProps {
   currentDate: Date;
-  billInstances: (BillInstance & { billName: string })[];
+  billInstances: (BillInstance & { billName: string; profileName: string; profileColor: string })[];
 }
 
 export function CalendarGrid({
@@ -24,7 +25,7 @@ export function CalendarGrid({
   billInstances,
 }: CalendarGridProps) {
   const [selectedInstance, setSelectedInstance] = useState<
-    (BillInstance & { billName: string }) | null
+    (BillInstance & { billName: string; profileName: string; profileColor: string }) | null
   >(null);
   const [showQuickEdit, setShowQuickEdit] = useState(false);
 
@@ -39,13 +40,6 @@ export function CalendarGrid({
     return billInstances.filter((instance) =>
       isSameDay(new Date(instance.dueDate), day),
     );
-  };
-
-  const handleInstanceClick = (
-    instance: BillInstance & { billName: string },
-  ) => {
-    setSelectedInstance(instance);
-    setShowQuickEdit(true);
   };
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -92,30 +86,15 @@ export function CalendarGrid({
 
                   <div className="space-y-1">
                     {dayInstances.map((instance) => {
-                      const isOverdue =
-                        !instance.isPaid &&
-                        new Date(instance.dueDate) < new Date();
-
                       return (
-                        <div
+                        <CalendarGridBillInstanceItem
                           key={instance._id}
-                          onClick={() => handleInstanceClick(instance)}
-                          className={`p-1 rounded text-xs cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${
-                            instance.isPaid
-                              ? "bg-green-100 text-green-800 border border-green-200"
-                              : isOverdue
-                                ? "bg-red-100 text-red-800 border border-red-200"
-                                : "bg-yellow-100 text-yellow-800 border border-yellow-200"
-                          }`}
-                        >
-                          <div className="font-medium truncate">
-                            {instance.description}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span>${instance.amount.toFixed(0)}</span>
-                            {instance.isPaid && <span>✓</span>}
-                          </div>
-                        </div>
+                          instance={instance}
+                          onInstanceSelect={(instance) => {
+                            setSelectedInstance(instance);
+                            setShowQuickEdit(true);
+                          }}
+                        />
                       );
                     })}
                   </div>

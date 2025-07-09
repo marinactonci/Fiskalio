@@ -1,7 +1,7 @@
-import { useMutation } from 'convex/react';
-import { Trash2 } from 'lucide-react';
-import React from 'react';
-import { toast } from 'sonner';
+import { useMutation } from "convex/react";
+import { Trash2 } from "lucide-react";
+import React from "react";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,10 +12,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { api } from '@/convex/_generated/api';
-import type { Profile } from '@/convex/schema';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { api } from "@/convex/_generated/api";
+import type { Profile } from "@/convex/schema";
 
 interface DeleteProfileAlertDialogProps {
   profile: Profile;
@@ -30,7 +30,7 @@ function DeleteProfileAlertDialog({ profile }: DeleteProfileAlertDialogProps) {
     try {
       await deleteProfileMutation({ id: profile._id });
     } catch {
-      toast.error('Failed to delete profile.');
+      toast.error("Failed to delete profile.");
     } finally {
       setLoading(false);
     }
@@ -39,11 +39,7 @@ function DeleteProfileAlertDialog({ profile }: DeleteProfileAlertDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
-          className="hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-          disabled={loading}
-          variant="destructive"
-        >
+        <Button disabled={loading} variant="destructive">
           <Trash2 className="mr-2 h-4 w-4" />
           Delete Profile
         </Button>
@@ -64,7 +60,7 @@ function DeleteProfileAlertDialog({ profile }: DeleteProfileAlertDialogProps) {
             disabled={loading}
             onClick={deleteProfile}
           >
-            {loading ? 'Deleting...' : 'Delete Profile'}
+            {loading ? "Deleting..." : "Delete Profile"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

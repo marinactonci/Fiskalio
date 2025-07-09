@@ -178,17 +178,44 @@ export const getAllBillInstancesWithBillNames = query({
       .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
       .collect();
 
-    // Create a map of billId to bill name
-    const billNameMap = new Map();
+    // Get all profiles for the user to create a lookup map
+    const profiles = await ctx.db
+      .query("profiles")
+      .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+      .collect();
+
+    // Create a map of billId to bill info (name and profileId)
+    const billInfoMap = new Map();
     bills.forEach((bill) => {
-      billNameMap.set(bill._id, bill.name);
+      billInfoMap.set(bill._id, {
+        name: bill.name,
+        profileId: bill.profileId,
+      });
     });
 
-    // Combine bill instances with bill names
-    return billInstances.map((instance) => ({
-      ...instance,
-      billName: billNameMap.get(instance.billId) || "Unknown Bill",
-    }));
+    // Create a map of profileId to profile info (name and color)
+    const profileInfoMap = new Map();
+    profiles.forEach((profile) => {
+      profileInfoMap.set(profile._id, {
+        name: profile.name,
+        color: profile.color || '#3b82f6',
+      });
+    });
+
+    // Combine bill instances with bill names and profile info
+    return billInstances.map((instance) => {
+      const billInfo = billInfoMap.get(instance.billId);
+      const profileInfo = billInfo
+        ? profileInfoMap.get(billInfo.profileId)
+        : undefined;
+
+      return {
+        ...instance,
+        billName: billInfo?.name || "Unknown Bill",
+        profileName: profileInfo?.name || "Unknown Profile",
+        profileColor: profileInfo?.color || "#3b82f6",
+      };
+    });
   },
 });
 
@@ -216,16 +243,39 @@ export const getBillInstancesByMonth = query({
       .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
       .collect();
 
-    // Create a map of billId to bill name
-    const billNameMap = new Map();
+    // Get all profiles for the user to create a lookup map
+    const profiles = await ctx.db
+      .query("profiles")
+      .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+      .collect();
+
+    // Create a map of billId to bill info (name and profileId)
+    const billInfoMap = new Map();
     bills.forEach((bill) => {
-      billNameMap.set(bill._id, bill.name);
+      billInfoMap.set(bill._id, {
+        name: bill.name,
+        profileId: bill.profileId,
+      });
     });
 
-    // Combine bill instances with bill names
-    return billInstances.map((instance) => ({
-      ...instance,
-      billName: billNameMap.get(instance.billId) || "Unknown Bill",
-    }));
+    // Create a map of profileId to profile name
+    const profileNameMap = new Map();
+    profiles.forEach((profile) => {
+      profileNameMap.set(profile._id, profile.name);
+    });
+
+    // Combine bill instances with bill names and profile names
+    return billInstances.map((instance) => {
+      const billInfo = billInfoMap.get(instance.billId);
+      const profileName = billInfo
+        ? profileNameMap.get(billInfo.profileId)
+        : undefined;
+
+      return {
+        ...instance,
+        billName: billInfo?.name || "Unknown Bill",
+        profileName: profileName || "Unknown Profile",
+      };
+    });
   },
 });

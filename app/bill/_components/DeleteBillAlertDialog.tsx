@@ -48,11 +48,7 @@ function DeleteBillAlertDialog({ bill }: DeleteBillAlertDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
-          className="hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-          disabled={loading}
-          variant="destructive"
-        >
+        <Button disabled={loading} variant="destructive">
           <Trash2 className="mr-2 h-4 w-4" />
           Delete Bill
         </Button>

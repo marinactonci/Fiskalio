@@ -20,10 +20,15 @@ function ProfileCard({ profile }: ProfileCardProps) {
               <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 dark:from-blue-400/30 dark:to-purple-400/30 group-hover:from-blue-500/30 group-hover:to-purple-500/30 dark:group-hover:from-blue-400/40 dark:group-hover:to-purple-400/40 transition-colors">
                 <HomeIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <div>
+              <div className="flex items-center space-x-2">
                 <CardTitle className="text-lg group-hover:text-primary transition-colors">
                   {profile.name}
                 </CardTitle>
+                <div
+                  className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600"
+                  style={{ backgroundColor: profile.color || '#3b82f6' }}
+                  title="Profile color"
+                />
               </div>
             </div>
             <Badge

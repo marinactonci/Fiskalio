@@ -21,7 +21,7 @@ import { api } from "@/convex/_generated/api";
 interface QuickEditInstanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  billInstance: BillInstance & { billName: string };
+  billInstance: BillInstance & { billName: string; profileName: string; profileColor: string };
 }
 
 export function QuickEditInstanceDialog({
@@ -88,9 +88,20 @@ export function QuickEditInstanceDialog({
           <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             {billInstance.billName}
           </DialogTitle>
-          <DialogDescription>
-            Quick edit for {format(new Date(billInstance.dueDate), "MMMM yyyy")}
-          </DialogDescription>
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <Badge variant="outline" className="text-xs flex items-center gap-1">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: billInstance.profileColor }}
+                />
+                {billInstance.profileName}
+              </Badge>
+            </div>
+            <DialogDescription>
+              Quick edit for {format(new Date(billInstance.dueDate), "MMMM yyyy")}
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4">

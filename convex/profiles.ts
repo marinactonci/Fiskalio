@@ -23,7 +23,7 @@ export const createProfile = mutation({
       address: args.address,
       color: args.color,
       userId: identity.tokenIdentifier,
-      billCount: 0,
+      billCount: 0, // Will be computed dynamically in queries
     };
 
     const profileId = await ctx.db.insert("profiles", profile);
@@ -46,7 +46,23 @@ export const getProfilesForUser = query({
       .withIndex("by_userId", (q) => q.eq("userId", identity.tokenIdentifier))
       .collect();
 
-    return profiles;
+    // For each profile, get the actual count of bills
+    const profilesWithCount = await Promise.all(
+      profiles.map(async (profile) => {
+        const bills = await ctx.db
+          .query("bills")
+          .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
+          .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+          .collect();
+
+        return {
+          ...profile,
+          billCount: bills.length,
+        };
+      })
+    );
+
+    return profilesWithCount;
   },
 });
 
@@ -67,7 +83,17 @@ export const getProfile = query({
       throw new Error("Profile not found");
     }
 
-    return profile;
+    // Get the actual count of bills for this profile
+    const bills = await ctx.db
+      .query("bills")
+      .withIndex("by_profile", (q) => q.eq("profileId", args.id))
+      .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+      .collect();
+
+    return {
+      ...profile,
+      billCount: bills.length,
+    };
   },
 });
 

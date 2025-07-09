@@ -25,7 +25,7 @@ export const createBillForProfile = mutation({
       name: args.name,
       eBill: args.eBill,
       userId: identity.tokenIdentifier,
-      billInstanceCount: 0,
+      billInstanceCount: 0, // Will be computed dynamically in queries
     };
 
     const billId = await ctx.db.insert("bills", bill);
@@ -49,7 +49,23 @@ export const getBillsForProfile = query({
       .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
       .collect();
 
-    return bills;
+    // For each bill, get the actual count of bill instances
+    const billsWithCount = await Promise.all(
+      bills.map(async (bill) => {
+        const instances = await ctx.db
+          .query("billInstances")
+          .withIndex("by_bill", (q) => q.eq("billId", bill._id))
+          .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+          .collect();
+
+        return {
+          ...bill,
+          billInstanceCount: instances.length,
+        };
+      })
+    );
+
+    return billsWithCount;
   },
 });
 
@@ -68,7 +84,17 @@ export const getBill = query({
       throw new Error("Bill not found or access denied");
     }
 
-    return bill;
+    // Get the actual count of bill instances
+    const instances = await ctx.db
+      .query("billInstances")
+      .withIndex("by_bill", (q) => q.eq("billId", args.id))
+      .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+      .collect();
+
+    return {
+      ...bill,
+      billInstanceCount: instances.length,
+    };
   },
 });
 

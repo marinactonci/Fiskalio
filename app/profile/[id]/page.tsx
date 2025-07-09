@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { ArrowLeft, Calendar, FileText, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -59,7 +59,7 @@ export default function Profile() {
             </h1>
             <div
               className="w-6 h-6 rounded-full border-2 border-gray-300"
-              style={{ backgroundColor: profile.color || '#3b82f6' }}
+              style={{ backgroundColor: profile.color || "#3b82f6" }}
               title="Profile color"
             />
             <ColorPicker profile={profile} />
@@ -85,11 +85,15 @@ export default function Profile() {
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-2xl">Bills</h2>
         <div className="flex space-x-3">
-          <Link href={`/calendar?profileId=${profile._id}`}>
-            <Button className="hover:bg-muted/50" variant="outline">
-              <Calendar className="mr-2 h-4 w-4" />
-              View in Calendar
-            </Button>
+          <Link
+            href={`/calendar?profileId=${profile._id}`}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "hover:bg-muted/50",
+            )}
+          >
+            <Calendar className="mr-2 h-4 w-4" />
+            View in Calendar
           </Link>
           {bills && bills.length > 0 && (
             <CreateBillDialog

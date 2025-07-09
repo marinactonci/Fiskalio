@@ -6,9 +6,15 @@ interface CalendarGridBillInstanceItemProps {
     billName: string;
     profileName: string;
     profileColor: string;
+    profileId: string;
   };
   onInstanceSelect: (
-    instance: BillInstance & { billName: string; profileName: string; profileColor: string },
+    instance: BillInstance & {
+      billName: string;
+      profileName: string;
+      profileColor: string;
+      profileId: string;
+    },
   ) => void;
 }
 
@@ -19,7 +25,12 @@ function CalendarGridBillInstanceItem({
   const isOverdue = !instance.isPaid && new Date(instance.dueDate) < new Date();
 
   const handleInstanceClick = (
-    instance: BillInstance & { billName: string; profileName: string; profileColor: string },
+    instance: BillInstance & {
+      billName: string;
+      profileName: string;
+      profileColor: string;
+      profileId: string;
+    },
   ) => {
     onInstanceSelect(instance);
   };

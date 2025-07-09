@@ -11,17 +11,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Check, X, Calendar, Euro } from "lucide-react";
 import type { BillInstance } from "@/convex/schema";
 import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface QuickEditInstanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  billInstance: BillInstance & { billName: string; profileName: string; profileColor: string };
+  billInstance: BillInstance & {
+    billName: string;
+    profileName: string;
+    profileColor: string;
+    profileId: string;
+  };
 }
 
 export function QuickEditInstanceDialog({
@@ -90,16 +97,23 @@ export function QuickEditInstanceDialog({
           </DialogTitle>
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="text-xs flex items-center gap-1">
+              <Link
+                href={`/profile/${billInstance.profileId}`}
+                className={cn(
+                  badgeVariants({ variant: "outline" }),
+                  "text-xs flex items-center gap-1",
+                )}
+              >
                 <div
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: billInstance.profileColor }}
                 />
                 {billInstance.profileName}
-              </Badge>
+              </Link>
             </div>
             <DialogDescription>
-              Quick edit for {format(new Date(billInstance.dueDate), "MMMM yyyy")}
+              Quick edit for{" "}
+              {format(new Date(billInstance.dueDate), "MMMM yyyy")}
             </DialogDescription>
           </div>
         </DialogHeader>

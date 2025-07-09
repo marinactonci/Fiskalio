@@ -6,11 +6,24 @@ import React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { SignUpButton } from "@clerk/nextjs";
 import { SignInButton } from "@clerk/nextjs";
-import { Button } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { PiggyBank } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 function Navbar() {
+  const pathname = usePathname();
+
+  const links = [
+    { href: "/", label: "Home" },
+    {
+      href: "/calendar",
+      label: "Calendar",
+      isActive: pathname === "/calendar",
+    },
+  ];
+
   return (
     <header className="h-14 border-b shadow-sm grid place-items-center">
       <div className="container mx-auto px-4 flex justify-between">
@@ -19,6 +32,27 @@ function Navbar() {
           <h1 className="text-xl font-bold">Fiskalio</h1>
         </Link>
         <div className="flex items-center gap-4">
+          <nav>
+            <ul className="flex items-center space-x-4">
+              {links.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className={cn(
+                      buttonVariants(
+                        link.isActive
+                          ? { variant: "outline" }
+                          : { variant: "ghost" },
+                      ),
+                      "px-3 py-2",
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
           <ModeToggle />
           <Authenticated>
             <UserButton />

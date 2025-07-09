@@ -214,6 +214,7 @@ export const getAllBillInstancesWithBillNames = query({
         billName: billInfo?.name || "Unknown Bill",
         profileName: profileInfo?.name || "Unknown Profile",
         profileColor: profileInfo?.color || "#3b82f6",
+        profileId: billInfo?.profileId || "",
       };
     });
   },
@@ -275,6 +276,61 @@ export const getBillInstancesByMonth = query({
         ...instance,
         billName: billInfo?.name || "Unknown Bill",
         profileName: profileName || "Unknown Profile",
+      };
+    });
+  },
+});
+
+export const getBillInstancesWithBillNamesByProfile = query({
+  args: {
+    profileId: v.id("profiles"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("User not authenticated");
+    }
+
+    // Get all bills for the specified profile
+    const bills = await ctx.db
+      .query("bills")
+      .withIndex("by_profile", (q) => q.eq("profileId", args.profileId))
+      .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+      .collect();
+
+    // Get all bill instances for these bills
+    const billIds = bills.map(bill => bill._id);
+    const allBillInstances = [];
+
+    for (const billId of billIds) {
+      const instances = await ctx.db
+        .query("billInstances")
+        .withIndex("by_bill", (q) => q.eq("billId", billId))
+        .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
+        .collect();
+      allBillInstances.push(...instances);
+    }
+
+    // Get profile info
+    const profile = await ctx.db.get(args.profileId);
+    const profileName = profile?.name || "Unknown Profile";
+    const profileColor = profile?.color || "#3b82f6";
+
+    // Create a map of billId to bill name
+    const billNameMap = new Map();
+    bills.forEach((bill) => {
+      billNameMap.set(bill._id, bill.name);
+    });
+
+    // Combine bill instances with bill names and profile info
+    return allBillInstances.map((instance) => {
+      return {
+        ...instance,
+        billName: billNameMap.get(instance.billId) || "Unknown Bill",
+        profileName,
+        profileColor,
+        profileId: args.profileId,
       };
     });
   },

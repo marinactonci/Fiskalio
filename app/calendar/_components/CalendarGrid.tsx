@@ -17,7 +17,12 @@ import CalendarGridBillInstanceItem from "./CalendarGridBillInstanceItem";
 
 interface CalendarGridProps {
   currentDate: Date;
-  billInstances: (BillInstance & { billName: string; profileName: string; profileColor: string })[];
+  billInstances: (BillInstance & {
+    billName: string;
+    profileName: string;
+    profileColor: string;
+    profileId: string;
+  })[];
 }
 
 export function CalendarGrid({
@@ -25,7 +30,13 @@ export function CalendarGrid({
   billInstances,
 }: CalendarGridProps) {
   const [selectedInstance, setSelectedInstance] = useState<
-    (BillInstance & { billName: string; profileName: string; profileColor: string }) | null
+    | (BillInstance & {
+        billName: string;
+        profileName: string;
+        profileColor: string;
+        profileId: string;
+      })
+    | null
   >(null);
   const [showQuickEdit, setShowQuickEdit] = useState(false);
 
@@ -90,8 +101,8 @@ export function CalendarGrid({
                         <CalendarGridBillInstanceItem
                           key={instance._id}
                           instance={instance}
-                          onInstanceSelect={(instance) => {
-                            setSelectedInstance(instance);
+                          onInstanceSelect={(selectedInstance) => {
+                            setSelectedInstance(selectedInstance);
                             setShowQuickEdit(true);
                           }}
                         />

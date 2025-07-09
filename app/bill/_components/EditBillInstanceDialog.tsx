@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/convex/_generated/api";
 import type { BillInstance } from "@/convex/schema";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const billInstanceSchema = z.object({
   month: z.date({ required_error: "Month is required" }),
@@ -122,10 +123,7 @@ export function EditBillInstanceDialog({
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {field.value ? (
-                            field.value.toLocaleDateString("en-US", {
-                              month: "long",
-                              year: "numeric",
-                            })
+                            format(field.value, "MMMM yyyy")
                           ) : (
                             <span>Select month</span>
                           )}
@@ -185,7 +183,7 @@ export function EditBillInstanceDialog({
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {field.value ? (
-                            field.value.toLocaleDateString()
+                            format(field.value, "PPP")
                           ) : (
                             <span>Select due date</span>
                           )}

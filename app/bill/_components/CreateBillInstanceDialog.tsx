@@ -1,12 +1,12 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from 'convex/react';
-import { CalendarIcon, Plus } from 'lucide-react';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "convex/react";
+import { CalendarIcon, Plus } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -23,30 +23,31 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { MonthPicker } from '@/components/ui/monthpicker';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { MonthPicker } from "@/components/ui/monthpicker";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Textarea } from '@/components/ui/textarea';
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const billInstanceSchema = z.object({
-  month: z.date({ required_error: 'Month is required' }),
-  amount: z.number().min(0.01, 'Amount must be greater than 0'),
-  dueDate: z.date({ required_error: 'Due date is required' }),
+  month: z.date({ required_error: "Month is required" }),
+  amount: z.number().min(0.01, "Amount must be greater than 0"),
+  dueDate: z.date({ required_error: "Due date is required" }),
   description: z.string().optional(),
 });
 
 type BillInstanceFormValues = z.infer<typeof billInstanceSchema>;
 
 interface CreateBillInstanceDialogProps {
-  billId: Id<'bills'>;
+  billId: Id<"bills">;
 }
 
 export function CreateBillInstanceDialog({
@@ -61,7 +62,7 @@ export function CreateBillInstanceDialog({
       month: undefined,
       amount: 0,
       dueDate: undefined,
-      description: '',
+      description: "",
     },
   });
 
@@ -69,19 +70,19 @@ export function CreateBillInstanceDialog({
     try {
       await createBillInstance({
         billId,
-        month: values.month.toLocaleDateString('en-US', {
-          month: 'long',
-          year: 'numeric',
+        month: values.month.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
         }),
         amount: values.amount,
-        dueDate: values.dueDate.toISOString().split('T')[0],
+        dueDate: values.dueDate.toISOString().split("T")[0],
         description: values.description,
       });
-      toast.success('Bill instance created successfully!');
+      toast.success("Bill instance created successfully!");
       form.reset();
       setOpen(false);
     } catch {
-      toast.error('Failed to create bill instance. Please try again');
+      toast.error("Failed to create bill instance. Please try again");
     }
   };
 
@@ -116,18 +117,15 @@ export function CreateBillInstanceDialog({
                       <PopoverTrigger asChild>
                         <Button
                           className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground'
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground",
                           )}
                           type="button"
                           variant="outline"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {field.value ? (
-                            field.value.toLocaleDateString('en-US', {
-                              month: 'long',
-                              year: 'numeric',
-                            })
+                            format(field.value, "MMMM yyyy")
                           ) : (
                             <span>Select month</span>
                           )}
@@ -179,15 +177,15 @@ export function CreateBillInstanceDialog({
                       <PopoverTrigger asChild>
                         <Button
                           className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground'
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground",
                           )}
                           type="button"
                           variant="outline"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {field.value ? (
-                            field.value.toLocaleDateString()
+                            format(field.value, "PPP")
                           ) : (
                             <span>Select due date</span>
                           )}
@@ -240,8 +238,8 @@ export function CreateBillInstanceDialog({
                 type="submit"
               >
                 {form.formState.isSubmitting
-                  ? 'Creating...'
-                  : 'Create Instance'}
+                  ? "Creating..."
+                  : "Create Instance"}
               </Button>
             </DialogFooter>
           </form>

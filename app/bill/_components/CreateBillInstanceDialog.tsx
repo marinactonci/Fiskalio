@@ -34,15 +34,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { cn } from "@/lib/utils";
+import { cn, formatDateForSaving } from "@/lib/utils";
 import { format } from "date-fns";
-
-const billInstanceSchema = z.object({
-  month: z.date({ required_error: "Month is required" }),
-  amount: z.number().min(0.01, "Amount must be greater than 0"),
-  dueDate: z.date({ required_error: "Due date is required" }),
-  description: z.string().optional(),
-});
+import { billInstanceSchema } from "@/schemas/billInstance";
 
 type BillInstanceFormValues = z.infer<typeof billInstanceSchema>;
 
@@ -75,7 +69,7 @@ export function CreateBillInstanceDialog({
           year: "numeric",
         }),
         amount: values.amount,
-        dueDate: values.dueDate.toISOString().split("T")[0],
+        dueDate: formatDateForSaving(values.dueDate),
         description: values.description,
       });
       toast.success("Bill instance created successfully!");

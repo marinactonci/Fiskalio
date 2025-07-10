@@ -92,10 +92,13 @@ export function QuickEditInstanceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] bg-background/95 backdrop-blur-sm">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            {billInstance.billName}
-          </DialogTitle>
-          <div className="space-y-1">
+          <DialogTitle className="flex items-center gap-4">
+            <Link
+              className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-purple-700"
+              href={`/bill/${billInstance.billId}`}
+            >
+              {billInstance.billName}
+            </Link>
             <div className="flex items-center space-x-2">
               <Link
                 href={`/profile/${billInstance.profileId}`}
@@ -111,11 +114,10 @@ export function QuickEditInstanceDialog({
                 {billInstance.profileName}
               </Link>
             </div>
-            <DialogDescription>
-              Quick edit for{" "}
-              {format(new Date(billInstance.dueDate), "MMMM yyyy")}
-            </DialogDescription>
-          </div>
+          </DialogTitle>
+          <DialogDescription>
+            Quick edit for {format(new Date(billInstance.dueDate), "MMMM yyyy")}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -141,7 +143,7 @@ export function QuickEditInstanceDialog({
                 billInstance.isPaid
                   ? "bg-green-100 text-green-800 border-green-200"
                   : isOverdue
-                    ? "bg-red-100 text-red-800 border-red-200"
+                    ? "bg-red-100 text-red-200 border-red-200"
                     : "bg-yellow-100 text-yellow-800 border-yellow-200"
               }
             >

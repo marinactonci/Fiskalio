@@ -34,7 +34,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/convex/_generated/api";
 import type { BillInstance } from "@/convex/schema";
-import { cn } from "@/lib/utils";
+import { cn, formatDateForSaving } from "@/lib/utils";
 import { format } from "date-fns";
 
 const billInstanceSchema = z.object({
@@ -61,7 +61,8 @@ export function EditBillInstanceDialog({
     defaultValues: {
       month: new Date(billInstance.month),
       amount: billInstance.amount,
-      dueDate: new Date(billInstance.dueDate),
+      // Parse date string as local date to avoid timezone issues
+      dueDate: new Date(billInstance.dueDate + "T00:00:00"),
       description: billInstance.description || "",
     },
   });
@@ -75,7 +76,7 @@ export function EditBillInstanceDialog({
           year: "numeric",
         }),
         amount: values.amount,
-        dueDate: values.dueDate.toISOString().split("T")[0],
+        dueDate: formatDateForSaving(values.dueDate),
         description: values.description,
       });
       toast.success("Bill instance updated successfully!");

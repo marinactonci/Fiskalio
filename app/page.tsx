@@ -24,7 +24,6 @@ import { SignUpButton } from "@clerk/nextjs";
 export default function LandingPage() {
   return (
     <div className="space-y-20">
-      {/* Hero Section */}
       <section className="text-center py-12">
         <div className="max-w-4xl mx-auto">
           <Badge variant="secondary" className="mb-6">

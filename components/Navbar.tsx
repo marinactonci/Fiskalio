@@ -18,6 +18,11 @@ function Navbar() {
   const links = [
     { href: "/", label: "Home", isActive: pathname === "/" },
     {
+      href: "/profiles",
+      label: "Profiles",
+      isActive: pathname.startsWith("/profiles"),
+    },
+    {
       href: "/calendar",
       label: "Calendar",
       isActive: pathname === "/calendar",

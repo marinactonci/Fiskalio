@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import type { BillInstance } from "@/convex/schema";
 import { useMutation } from "convex/react";
@@ -37,7 +37,7 @@ function DeleteBillInstanceAlertDialog({
     try {
       await deleteBillInstance({ id: billInstance._id as Id<"billInstances"> });
       toast.success("Bill instance deleted successfully!");
-      router.push(`/bill/${billInstance.billId}`);
+      router.push(`/bills/${billInstance.billId}`);
     } catch (error) {
       if (error instanceof Error) {
         toast.error("Failed to delete bill instance. Please try again.");
@@ -51,7 +51,7 @@ function DeleteBillInstanceAlertDialog({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button disabled={loading} variant="destructive" size={"sm"}>
-          <Trash2 className="mr-2 h-4 w-4" />
+          <Trash2 className="h-4 w-4" />
           Delete
         </Button>
       </AlertDialogTrigger>
@@ -66,7 +66,7 @@ function DeleteBillInstanceAlertDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            className="bg-red-600 hover:bg-red-700"
+            className={buttonVariants({ variant: "destructive" })}
             disabled={loading}
             onClick={handleDeleteBillInstance}
           >

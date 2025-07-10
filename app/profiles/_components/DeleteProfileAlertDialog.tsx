@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import type { Profile } from "@/convex/schema";
 
@@ -56,7 +56,7 @@ function DeleteProfileAlertDialog({ profile }: DeleteProfileAlertDialogProps) {
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            className="bg-red-600 hover:bg-red-700"
+            className={buttonVariants({ variant: "destructive" })}
             disabled={loading}
             onClick={deleteProfile}
           >

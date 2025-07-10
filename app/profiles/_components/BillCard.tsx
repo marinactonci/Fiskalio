@@ -11,7 +11,7 @@ interface BillCardProps {
 
 function BillCard({ bill }: BillCardProps) {
   return (
-    <Link href={`/bill/${bill._id}`}>
+    <Link href={`/bills/${bill._id}`}>
       <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card backdrop-blur-sm border-muted/20 hover:border-primary/20">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">

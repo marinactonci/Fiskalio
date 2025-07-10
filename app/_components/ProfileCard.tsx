@@ -12,7 +12,7 @@ interface ProfileCardProps {
 
 function ProfileCard({ profile }: ProfileCardProps) {
   return (
-    <Link href={`/profile/${profile._id}`}>
+    <Link href={`/profiles/${profile._id}`}>
       <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card backdrop-blur-sm border-muted/20 hover:border-primary/20">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">

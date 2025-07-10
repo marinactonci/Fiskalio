@@ -83,14 +83,14 @@ export function BillInstanceCard({ billInstance }: BillInstanceCardProps) {
       if (billInstance.isPaid) {
         return (
           <>
-            <X className="mr-1 h-4 w-4" />
+            <X className="h-4 w-4" />
             Mark Unpaid
           </>
         );
       }
       return (
         <>
-          <Check className="mr-1 h-4 w-4" />
+          <Check className="h-4 w-4" />
           Mark Paid
         </>
       );

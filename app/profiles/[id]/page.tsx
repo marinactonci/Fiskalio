@@ -31,9 +31,12 @@ export default function Profile() {
     return (
       <div className="py-16 text-center">
         <h2 className="mb-4 font-semibold text-2xl">Profile not found</h2>
-        <Link className={cn(buttonVariants, { variant: "outline" })} href={"/"}>
+        <Link
+          className={cn(buttonVariants, { variant: "outline" })}
+          href={"/profiles"}
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
+          Back to Profiles
         </Link>
       </div>
     );
@@ -47,7 +50,7 @@ export default function Profile() {
             buttonVariants({ variant: "ghost", size: "sm" }),
             "hover:bg-muted/50",
           )}
-          href={"/"}
+          href={"/profiles"}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back

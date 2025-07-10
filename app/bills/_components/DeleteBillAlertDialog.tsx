@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import type { Bill } from "@/convex/schema";
 import { useMutation } from "convex/react";
@@ -35,7 +35,7 @@ function DeleteBillAlertDialog({ bill }: DeleteBillAlertDialogProps) {
     try {
       await deleteBill({ id: bill._id as Id<"bills"> });
       toast.success("Bill deleted successfully!");
-      router.push(`/profile/${bill?.profileId}`);
+      router.push(`/profiles/${bill?.profileId}`);
     } catch (error) {
       if (error instanceof Error) {
         toast.error("Failed to delete bill. Please try again.");
@@ -64,7 +64,7 @@ function DeleteBillAlertDialog({ bill }: DeleteBillAlertDialogProps) {
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            className="bg-red-600 hover:bg-red-700"
+            className={buttonVariants({ variant: "destructive" })}
             disabled={loading}
             onClick={handleDeleteBill}
           >

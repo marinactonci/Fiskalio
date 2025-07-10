@@ -83,7 +83,7 @@ export default function Calendar() {
             {profileId && (
               <>
                 <Link
-                  href={`/profile/${profileId}`}
+                  href={`/profiles/${profileId}`}
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "sm" }),
                     "hover:bg-muted/50",

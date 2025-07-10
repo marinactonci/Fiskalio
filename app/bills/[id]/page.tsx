@@ -3,8 +3,8 @@
 import { useQuery } from "convex/react";
 import { ArrowLeft, DollarSign } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { CreateBillInstanceDialog } from "@/app/bill/_components/CreateBillInstanceDialog";
-import { EditBillDialog } from "@/app/bill/_components/EditBillDialog";
+import { CreateBillInstanceDialog } from "@/app/bills/_components/CreateBillInstanceDialog";
+import { EditBillDialog } from "@/app/bills/_components/EditBillDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
@@ -37,7 +37,7 @@ export default function Bill() {
       <div className="flex flex-col items-start space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
         <Button
           className="hover:bg-muted/50"
-          onClick={() => router.push(`/profile/${bill.profileId}`)}
+          onClick={() => router.push(`/profiles/${bill.profileId}`)}
           size="sm"
           variant="ghost"
         >

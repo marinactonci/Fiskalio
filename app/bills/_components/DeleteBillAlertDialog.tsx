@@ -41,7 +41,7 @@ function DeleteBillAlertDialog({ bill }: DeleteBillAlertDialogProps) {
       } else {
         toast.error(result.error || "Failed to delete bill.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete bill. Please try again.");
     } finally {
       setLoading(false);

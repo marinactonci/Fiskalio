@@ -43,7 +43,7 @@ function DeleteBillInstanceAlertDialog({
       } else {
         toast.error(result.error || "Failed to delete bill instance.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete bill instance. Please try again.");
     } finally {
       setLoading(false);

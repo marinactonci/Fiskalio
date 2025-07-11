@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { isValidConvexId } from "@/lib/id-validation";
 import { BillInstanceCard } from "../_components/BillInstanceCard";
 import { BillDashboard } from "../_components/BillDashboard";
 import DeleteBillAlertDialog from "../_components/DeleteBillAlertDialog";
@@ -18,11 +19,34 @@ export default function Bill() {
   const { id } = useParams();
   const router = useRouter();
 
-  // Queries and mutations
-  const billResult = useQuery(api.bills.getBill, { id: id as Id<"bills"> });
-  const instancesResult = useQuery(api.billInstances.getBillInstancesForBill, {
-    billId: id as Id<"bills">,
-  });
+  // Check if the ID is valid before making the query
+  const isValidId = typeof id === "string" && isValidConvexId(id);
+
+  // Only make the query if the ID is valid
+  const billResult = useQuery(
+    api.bills.getBill,
+    isValidId ? { id: id as Id<"bills"> } : "skip"
+  );
+  const instancesResult = useQuery(
+    api.billInstances.getBillInstancesForBill,
+    isValidId ? { billId: id as Id<"bills"> } : "skip"
+  );
+
+  // Handle invalid ID format
+  if (!isValidId) {
+    return (
+      <div className="py-16 text-center">
+        <h2 className="mb-4 font-semibold text-2xl">Invalid Bill ID</h2>
+        <p className="text-muted-foreground mb-4">
+          The bill ID in the URL is not valid. Please check the URL and try again.
+        </p>
+        <Button variant="outline" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Go Back
+        </Button>
+      </div>
+    );
+  }
 
   if (!billResult || !instancesResult) {
     return (

@@ -39,7 +39,7 @@ function DeleteProfileAlertDialog({ profile }: DeleteProfileAlertDialogProps) {
       } else {
         toast.error(result.error || "Failed to delete profile.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete profile.");
     } finally {
       setLoading(false);

@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { isValidConvexId } from "@/lib/id-validation";
 import BillCard from "../_components/BillCard";
 import { ProfileDashboard } from "../_components/ProfileDashboard";
 import CreateBillDialog from "../_components/CreateBillDialog";
@@ -19,13 +20,38 @@ import ColorPicker from "../_components/ColorPicker";
 export default function Profile() {
   const { id } = useParams();
 
-  const profileResult = useQuery(api.profiles.getProfile, {
-    id: id as Id<"profiles">,
-  });
+  // Check if the ID is valid before making the query
+  const isValidId = typeof id === 'string' && isValidConvexId(id);
 
-  const billsResult = useQuery(api.bills.getBillsForProfile, {
-    profileId: id as Id<"profiles">,
-  });
+  // Only make the query if the ID is valid
+  const profileResult = useQuery(
+    api.profiles.getProfile,
+    isValidId ? { id: id as Id<"profiles"> } : "skip"
+  );
+
+  const billsResult = useQuery(
+    api.bills.getBillsForProfile,
+    isValidId ? { profileId: id as Id<"profiles"> } : "skip"
+  );
+
+  // Handle invalid ID format
+  if (!isValidId) {
+    return (
+      <div className="py-16 text-center">
+        <h2 className="mb-4 font-semibold text-2xl">Invalid Profile ID</h2>
+        <p className="text-muted-foreground mb-4">
+          The profile ID in the URL is not valid. Please check the URL and try again.
+        </p>
+        <Link
+          className={cn(buttonVariants({ variant: "outline" }))}
+          href={"/profiles"}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Profiles
+        </Link>
+      </div>
+    );
+  }
 
   if (!profileResult || !billsResult) {
     return (
@@ -41,7 +67,7 @@ export default function Profile() {
         <h2 className="mb-4 font-semibold text-2xl">Profile not found</h2>
         <p className="text-muted-foreground mb-4">{profileResult.error}</p>
         <Link
-          className={cn(buttonVariants, { variant: "outline" })}
+          className={cn(buttonVariants({ variant: "outline" }))}
           href={"/profiles"}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -57,7 +83,7 @@ export default function Profile() {
         <h2 className="mb-4 font-semibold text-2xl">Error loading bills</h2>
         <p className="text-muted-foreground mb-4">{billsResult.error}</p>
         <Link
-          className={cn(buttonVariants, { variant: "outline" })}
+          className={cn(buttonVariants({ variant: "outline" }))}
           href={"/profiles"}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

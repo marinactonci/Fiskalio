@@ -58,13 +58,13 @@ export function CalendarGrid({
   return (
     <>
       <Card className="bg-gradient-to-br from-background/80 to-muted/20 backdrop-blur-sm">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-7 gap-2">
+        <CardContent className="p-2 sm:p-6">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {/* Header row with day names */}
             {weekDays.map((day) => (
               <div
                 key={day}
-                className="p-2 text-center font-medium text-muted-foreground"
+                className="p-1 sm:p-2 text-center font-medium text-muted-foreground text-xs sm:text-sm"
               >
                 {day}
               </div>
@@ -79,14 +79,14 @@ export function CalendarGrid({
               return (
                 <div
                   key={day.toISOString()}
-                  className={`min-h-[120px] p-2 border rounded-lg transition-colors ${
+                  className={`min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border rounded-lg transition-colors ${
                     isCurrentMonth
                       ? "bg-background/50 border-border/50"
                       : "bg-muted/20 border-muted/30"
                   } ${isToday ? "ring-2 ring-primary/50" : ""}`}
                 >
                   <div
-                    className={`text-sm font-medium mb-2 ${
+                    className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
                       isCurrentMonth
                         ? "text-foreground"
                         : "text-muted-foreground"
@@ -95,7 +95,7 @@ export function CalendarGrid({
                     {format(day, "d")}
                   </div>
 
-                  <div className="space-y-1">
+                  <div className="flex flex-wrap gap-0.5 sm:flex-col sm:space-y-1">
                     {dayInstances.map((instance) => {
                       return (
                         <CalendarGridBillInstanceItem

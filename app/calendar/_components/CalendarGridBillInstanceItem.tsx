@@ -36,33 +36,55 @@ function CalendarGridBillInstanceItem({
   };
 
   return (
-    <div
-      key={instance._id}
-      onClick={() => handleInstanceClick(instance)}
-      className={`p-1 rounded text-xs cursor-pointer transition-all hover:scale-105 hover:shadow-sm border-l-4 ${
-        instance.isPaid
-          ? "bg-green-100 text-green-800 border-green-200"
-          : isOverdue
-            ? "bg-red-100 text-red-800 border-red-200"
-            : "bg-yellow-100 text-yellow-800 border-yellow-200"
-      }`}
-      style={{
-        borderLeftColor: instance.profileColor,
-      }}
-    >
-      <div className="font-medium truncate">{instance.description}</div>
-      <div className="flex items-center justify-between">
-        <span>${instance.amount.toFixed(0)}</span>
-        <div className="flex items-center gap-1">
-          {instance.isPaid && <span>✓</span>}
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: instance.profileColor }}
-            title={instance.profileName}
-          />
+    <>
+      {/* Mobile view - compact circles */}
+      <div
+        className="sm:hidden w-4 h-4 rounded-full cursor-pointer transition-all hover:scale-110 border flex items-center justify-center"
+        onClick={() => handleInstanceClick(instance)}
+        style={{
+          backgroundColor: instance.profileColor,
+          borderColor: instance.isPaid ? '#22c55e' : isOverdue ? '#ef4444' : '#eab308',
+          borderWidth: '2px',
+        }}
+        title={`${instance.description} - $${instance.amount.toFixed(0)} ${instance.isPaid ? '(Paid)' : isOverdue ? '(Overdue)' : '(Pending)'}`}
+      >
+        {instance.isPaid && (
+          <span className="text-white text-[8px] font-bold">✓</span>
+        )}
+      </div>
+
+      {/* Desktop view - full cards */}
+      <div
+        className="hidden sm:block p-1 rounded text-xs cursor-pointer transition-all hover:scale-105 hover:shadow-sm border-l-4"
+        onClick={() => handleInstanceClick(instance)}
+        style={{
+          borderLeftColor: instance.profileColor,
+          backgroundColor: instance.isPaid
+            ? '#f0fdf4'
+            : isOverdue
+              ? '#fef2f2'
+              : '#fefce8',
+          color: instance.isPaid
+            ? '#166534'
+            : isOverdue
+              ? '#991b1b'
+              : '#854d0e',
+        }}
+      >
+        <div className="font-medium truncate">{instance.description}</div>
+        <div className="flex items-center justify-between">
+          <span>${instance.amount.toFixed(0)}</span>
+          <div className="flex items-center gap-1">
+            {instance.isPaid && <span>✓</span>}
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: instance.profileColor }}
+              title={instance.profileName}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

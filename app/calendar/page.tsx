@@ -109,30 +109,35 @@ export default function Calendar() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigateMonth("prev")}
-            className="hover:bg-muted/50"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <h2 className="text-2xl font-semibold min-w-[200px] text-center">
-            {monthName}
-          </h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigateMonth("next")}
-            className="hover:bg-muted/50"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+      {/* Mobile responsive navigation and filters */}
+      <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+        {/* Month Navigation */}
+        <div className="flex items-center justify-center lg:justify-start">
+          <div className="flex items-center space-x-4 lg:space-x-8">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateMonth("prev")}
+              className="hover:bg-muted/50"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <h2 className="text-2xl font-semibold w-auto text-center">
+              {monthName}
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateMonth("next")}
+              className="hover:bg-muted/50"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-4">
+        {/* Filters and Stats */}
+        <div className="flex flex-col items-center space-y-3 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-4">
           <div className="flex items-center space-x-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select

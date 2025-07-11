@@ -19,18 +19,55 @@ export default function Bill() {
   const router = useRouter();
 
   // Queries and mutations
-  const bill = useQuery(api.bills.getBill, { id: id as Id<"bills"> });
-  const instances = useQuery(api.billInstances.getBillInstancesForBill, {
+  const billResult = useQuery(api.bills.getBill, { id: id as Id<"bills"> });
+  const instancesResult = useQuery(api.billInstances.getBillInstancesForBill, {
     billId: id as Id<"bills">,
   });
 
-  if (!(bill && instances)) {
+  if (!billResult || !instancesResult) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-primary border-b-2" />
       </div>
     );
   }
+
+  if (!billResult.success) {
+    return (
+      <div className="py-16 text-center">
+        <h2 className="mb-4 font-semibold text-2xl">Bill not found</h2>
+        <p className="text-muted-foreground mb-4">{billResult.error}</p>
+        <Button
+          className="hover:bg-muted/50"
+          onClick={() => router.push('/profiles')}
+          variant="outline"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Profiles
+        </Button>
+      </div>
+    );
+  }
+
+  if (!instancesResult.success) {
+    return (
+      <div className="py-16 text-center">
+        <h2 className="mb-4 font-semibold text-2xl">Error loading bill instances</h2>
+        <p className="text-muted-foreground mb-4">{instancesResult.error}</p>
+        <Button
+          className="hover:bg-muted/50"
+          onClick={() => router.push('/profiles')}
+          variant="outline"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Profiles
+        </Button>
+      </div>
+    );
+  }
+
+  const bill = billResult.data!;
+  const instances = instancesResult.data || [];
 
   return (
     <div className="space-y-8">

@@ -14,7 +14,7 @@ export const createBillInstance = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const billInstance = {
@@ -28,7 +28,7 @@ export const createBillInstance = mutation({
     };
 
     const instanceId = await ctx.db.insert("billInstances", billInstance);
-    return instanceId;
+    return { success: true, data: instanceId };
   },
 });
 
@@ -45,17 +45,17 @@ export const updateBillInstance = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const billInstance = await ctx.db.get(args.id);
 
     if (!billInstance) {
-      throw new Error("Bill instance not found");
+      return { success: false, error: "Bill instance not found" };
     }
 
     if (billInstance.userId !== identity.tokenIdentifier) {
-      throw new Error("Unauthorized to update this bill instance");
+      return { success: false, error: "Unauthorized to update this bill instance" };
     }
 
     const updates: Partial<{
@@ -82,7 +82,7 @@ export const updateBillInstance = mutation({
     }
 
     await ctx.db.patch(args.id, updates);
-    return args.id;
+    return { success: true, data: args.id };
   },
 });
 
@@ -94,21 +94,21 @@ export const toggleBillInstancePaidStatus = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const billInstance = await ctx.db.get(args.id);
 
     if (!billInstance) {
-      throw new Error("Bill instance not found");
+      return { success: false, error: "Bill instance not found" };
     }
 
     if (billInstance.userId !== identity.tokenIdentifier) {
-      throw new Error("Unauthorized to update this bill instance");
+      return { success: false, error: "Unauthorized to update this bill instance" };
     }
 
     await ctx.db.patch(args.id, { isPaid: !billInstance.isPaid });
-    return args.id;
+    return { success: true, data: args.id };
   },
 });
 
@@ -120,21 +120,21 @@ export const deleteBillInstance = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const billInstance = await ctx.db.get(args.id);
 
     if (!billInstance) {
-      throw new Error("Bill instance not found");
+      return { success: false, error: "Bill instance not found" };
     }
 
     if (billInstance.userId !== identity.tokenIdentifier) {
-      throw new Error("Unauthorized to delete this bill instance");
+      return { success: false, error: "Unauthorized to delete this bill instance" };
     }
 
     await ctx.db.delete(args.id);
-    return args.id;
+    return { success: true, data: args.id };
   },
 });
 
@@ -146,7 +146,7 @@ export const getBillInstancesForBill = query({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const billInstances = await ctx.db
@@ -155,7 +155,7 @@ export const getBillInstancesForBill = query({
       .filter((q) => q.eq(q.field("userId"), identity.tokenIdentifier))
       .collect();
 
-    return billInstances;
+    return { success: true, data: billInstances };
   },
 });
 
@@ -164,7 +164,7 @@ export const getAllBillInstancesWithBillNames = query({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     // Get all bill instances for the user
@@ -204,7 +204,7 @@ export const getAllBillInstancesWithBillNames = query({
     });
 
     // Combine bill instances with bill names and profile info
-    return billInstances.map((instance) => {
+    const result = billInstances.map((instance) => {
       const billInfo = billInfoMap.get(instance.billId);
       const profileInfo = billInfo
         ? profileInfoMap.get(billInfo.profileId)
@@ -218,6 +218,8 @@ export const getAllBillInstancesWithBillNames = query({
         profileId: billInfo?.profileId || "",
       };
     });
+
+    return { success: true, data: result };
   },
 });
 
@@ -229,7 +231,7 @@ export const getBillInstancesByMonth = query({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const billInstances = await ctx.db
@@ -267,7 +269,7 @@ export const getBillInstancesByMonth = query({
     });
 
     // Combine bill instances with bill names and profile names
-    return billInstances.map((instance) => {
+    const result = billInstances.map((instance) => {
       const billInfo = billInfoMap.get(instance.billId);
       const profileName = billInfo
         ? profileNameMap.get(billInfo.profileId)
@@ -279,6 +281,8 @@ export const getBillInstancesByMonth = query({
         profileName: profileName || "Unknown Profile",
       };
     });
+
+    return { success: true, data: result };
   },
 });
 
@@ -290,7 +294,7 @@ export const getBillInstancesWithBillNamesByProfile = query({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     // Get all bills for the specified profile
@@ -325,7 +329,7 @@ export const getBillInstancesWithBillNamesByProfile = query({
     });
 
     // Combine bill instances with bill names and profile info
-    return allBillInstances.map((instance) => {
+    const result = allBillInstances.map((instance) => {
       return {
         ...instance,
         billName: billNameMap.get(instance.billId) || "Unknown Bill",
@@ -334,6 +338,8 @@ export const getBillInstancesWithBillNamesByProfile = query({
         profileId: args.profileId,
       };
     });
+
+    return { success: true, data: result };
   },
 });
 

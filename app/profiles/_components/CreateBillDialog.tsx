@@ -71,15 +71,19 @@ function CreateBillDialog({ text, profileId }: CreateBillDialogProps) {
             }
           : undefined;
 
-      await createBill({
+      const result = await createBill({
         profileId,
         name: values.name,
         eBill: eBillData,
       });
 
-      toast.success("Bill created successfully!");
-      form.reset();
-      setOpen(false);
+      if (result.success) {
+        toast.success("Bill created successfully!");
+        form.reset();
+        setOpen(false);
+      } else {
+        toast.error(result.error || "Failed to create bill.");
+      }
     } catch (error) {
       console.error("Error creating bill:", error);
       toast.error("Failed to create bill. Please try again.");

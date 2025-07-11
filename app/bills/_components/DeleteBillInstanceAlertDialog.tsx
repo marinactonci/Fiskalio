@@ -35,13 +35,16 @@ function DeleteBillInstanceAlertDialog({
   const handleDeleteBillInstance = async () => {
     setLoading(true);
     try {
-      await deleteBillInstance({ id: billInstance._id as Id<"billInstances"> });
-      toast.success("Bill instance deleted successfully!");
-      router.push(`/bills/${billInstance.billId}`);
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error("Failed to delete bill instance. Please try again.");
+      const result = await deleteBillInstance({ id: billInstance._id as Id<"billInstances"> });
+
+      if (result.success) {
+        toast.success("Bill instance deleted successfully!");
+        router.push(`/bills/${billInstance.billId}`);
+      } else {
+        toast.error(result.error || "Failed to delete bill instance.");
       }
+    } catch (error) {
+      toast.error("Failed to delete bill instance. Please try again.");
     } finally {
       setLoading(false);
     }

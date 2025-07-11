@@ -17,7 +17,7 @@ export const createBillForProfile = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const bill = {
@@ -30,7 +30,7 @@ export const createBillForProfile = mutation({
 
     const billId = await ctx.db.insert("bills", bill);
 
-    return billId;
+    return { success: true, data: billId };
   },
 });
 
@@ -40,7 +40,7 @@ export const getBillsForProfile = query({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const bills = await ctx.db
@@ -65,7 +65,7 @@ export const getBillsForProfile = query({
       })
     );
 
-    return billsWithCount;
+    return { success: true, data: billsWithCount };
   },
 });
 
@@ -75,13 +75,17 @@ export const getBill = query({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const bill = await ctx.db.get(args.id);
 
-    if (!bill || bill.userId !== identity.tokenIdentifier) {
-      throw new Error("Bill not found or access denied");
+    if (!bill) {
+      return { success: false, error: "Bill not found" };
+    }
+
+    if (bill.userId !== identity.tokenIdentifier) {
+      return { success: false, error: "Unauthorized to access this bill" };
     }
 
     // Get the actual count of bill instances
@@ -92,8 +96,11 @@ export const getBill = query({
       .collect();
 
     return {
-      ...bill,
-      billInstanceCount: instances.length,
+      success: true,
+      data: {
+        ...bill,
+        billInstanceCount: instances.length,
+      },
     };
   },
 });
@@ -104,13 +111,17 @@ export const deleteBill = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const bill = await ctx.db.get(args.id);
 
-    if (!bill || bill.userId !== identity.tokenIdentifier) {
-      throw new Error("Bill not found or access denied");
+    if (!bill) {
+      return { success: false, error: "Bill not found" };
+    }
+
+    if (bill.userId !== identity.tokenIdentifier) {
+      return { success: false, error: "Unauthorized to delete this bill" };
     }
 
     // Delete all associated bill instances first
@@ -125,7 +136,7 @@ export const deleteBill = mutation({
 
     await ctx.db.delete(args.id);
 
-    return args.id;
+    return { success: true, data: args.id };
   },
 });
 
@@ -145,13 +156,17 @@ export const updateBill = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const bill = await ctx.db.get(args.id);
 
-    if (!bill || bill.userId !== identity.tokenIdentifier) {
-      throw new Error("Bill not found or access denied");
+    if (!bill) {
+      return { success: false, error: "Bill not found" };
+    }
+
+    if (bill.userId !== identity.tokenIdentifier) {
+      return { success: false, error: "Unauthorized to update this bill" };
     }
 
     const updates: {
@@ -166,6 +181,6 @@ export const updateBill = mutation({
     }
 
     await ctx.db.patch(args.id, updates);
-    return args.id;
+    return { success: true, data: args.id };
   },
 });

@@ -36,12 +36,17 @@ function ColorPicker({ profile }: ColorPickerProps) {
 
   const handleColorChange = async (color: string) => {
     try {
-      await updateProfileColor({
+      const result = await updateProfileColor({
         id: profile._id,
         color,
       });
-      toast.success('Profile color updated!');
-      setOpen(false);
+
+      if (result.success) {
+        toast.success('Profile color updated!');
+        setOpen(false);
+      } else {
+        toast.error(result.error || 'Failed to update color.');
+      }
     } catch {
       toast.error('Failed to update color. Please try again.');
     }

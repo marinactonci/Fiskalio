@@ -33,13 +33,16 @@ function DeleteBillAlertDialog({ bill }: DeleteBillAlertDialogProps) {
   const handleDeleteBill = async () => {
     setLoading(true);
     try {
-      await deleteBill({ id: bill._id as Id<"bills"> });
-      toast.success("Bill deleted successfully!");
-      router.push(`/profiles/${bill?.profileId}`);
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error("Failed to delete bill. Please try again.");
+      const result = await deleteBill({ id: bill._id as Id<"bills"> });
+
+      if (result.success) {
+        toast.success("Bill deleted successfully!");
+        router.push(`/profiles/${bill?.profileId}`);
+      } else {
+        toast.error(result.error || "Failed to delete bill.");
       }
+    } catch (error) {
+      toast.error("Failed to delete bill. Please try again.");
     } finally {
       setLoading(false);
     }

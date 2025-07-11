@@ -19,18 +19,27 @@ import ColorPicker from "../_components/ColorPicker";
 export default function Profile() {
   const { id } = useParams();
 
-  const profile = useQuery(api.profiles.getProfile, {
+  const profileResult = useQuery(api.profiles.getProfile, {
     id: id as Id<"profiles">,
   });
 
-  const bills = useQuery(api.bills.getBillsForProfile, {
+  const billsResult = useQuery(api.bills.getBillsForProfile, {
     profileId: id as Id<"profiles">,
   });
 
-  if (!profile) {
+  if (!profileResult || !billsResult) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!profileResult.success) {
     return (
       <div className="py-16 text-center">
         <h2 className="mb-4 font-semibold text-2xl">Profile not found</h2>
+        <p className="text-muted-foreground mb-4">{profileResult.error}</p>
         <Link
           className={cn(buttonVariants, { variant: "outline" })}
           href={"/profiles"}
@@ -41,6 +50,25 @@ export default function Profile() {
       </div>
     );
   }
+
+  if (!billsResult.success) {
+    return (
+      <div className="py-16 text-center">
+        <h2 className="mb-4 font-semibold text-2xl">Error loading bills</h2>
+        <p className="text-muted-foreground mb-4">{billsResult.error}</p>
+        <Link
+          className={cn(buttonVariants, { variant: "outline" })}
+          href={"/profiles"}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Profiles
+        </Link>
+      </div>
+    );
+  }
+
+  const profile = profileResult.data!;
+  const bills = billsResult.data || [];
 
   return (
     <div className="space-y-8">
@@ -84,7 +112,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <ProfileDashboard profileId={id as Id<"profiles">} bills={bills || []} />
+      <ProfileDashboard profileId={id as Id<"profiles">} bills={bills} />
 
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-2xl">Bills</h2>
@@ -99,7 +127,7 @@ export default function Profile() {
             <Calendar className="mr-2 h-4 w-4" />
             View in Calendar
           </Link>
-          {bills && bills.length > 0 && (
+          {bills.length > 0 && (
             <CreateBillDialog
               text="Add New Bill"
               profileId={id as Id<"profiles">}
@@ -108,7 +136,7 @@ export default function Profile() {
         </div>
       </div>
 
-      {bills?.length === 0 ? (
+      {bills.length === 0 ? (
         <Card className="border-2 border-muted-foreground/25 border-dashed bg-gradient-to-br from-background/50 to-muted/20 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <FileText className="mb-4 h-16 w-16 text-muted-foreground/50" />
@@ -124,7 +152,7 @@ export default function Profile() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {bills?.map((bill) => (
+          {bills.map((bill) => (
             <BillCard bill={bill} key={bill._id} />
           ))}
         </div>

@@ -45,17 +45,22 @@ export function QuickEditInstanceDialog({
     setLoading(true);
     try {
       console.log("Toggling paid status for instance:", billInstance._id);
-      await updateBillInstance({
+      const result = await updateBillInstance({
         id: billInstance._id,
         isPaid: !billInstance.isPaid,
       });
-      onOpenChange(false);
-      toast.success(
-        `Bill marked as ${!billInstance.isPaid ? "paid" : "unpaid"}`,
-      );
+
+      if (result.success) {
+        onOpenChange(false);
+        toast.success(
+          `Bill marked as ${!billInstance.isPaid ? "paid" : "unpaid"}`,
+        );
+      } else {
+        toast.error(result.error || "Failed to update bill instance");
+      }
     } catch (error) {
       console.error("Error updating instance:", error);
-      toast("Failed to update bill instance");
+      toast.error("Failed to update bill instance");
     } finally {
       setLoading(false);
     }
@@ -64,22 +69,27 @@ export function QuickEditInstanceDialog({
   const updateAmount = async () => {
     const newAmount = parseFloat(amount);
     if (isNaN(newAmount) || newAmount <= 0) {
-      toast("Please enter a valid amount");
+      toast.error("Please enter a valid amount");
       return;
     }
 
     setLoading(true);
     try {
       console.log("Updating amount for instance:", billInstance._id, newAmount);
-      await updateBillInstance({
+      const result = await updateBillInstance({
         id: billInstance._id,
         amount: newAmount,
       });
-      onOpenChange(false);
-      toast("Amount updated successfully");
+
+      if (result.success) {
+        onOpenChange(false);
+        toast.success("Amount updated successfully");
+      } else {
+        toast.error(result.error || "Failed to update bill instance");
+      }
     } catch (error) {
       console.error("Error updating instance:", error);
-      toast("Failed to update bill instance");
+      toast.error("Failed to update bill instance");
     } finally {
       setLoading(false);
     }

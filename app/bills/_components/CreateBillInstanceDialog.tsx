@@ -62,7 +62,7 @@ export function CreateBillInstanceDialog({
 
   const onSubmit = async (values: BillInstanceFormValues) => {
     try {
-      await createBillInstance({
+      const result = await createBillInstance({
         billId,
         month: values.month.toLocaleDateString("en-US", {
           month: "long",
@@ -72,9 +72,14 @@ export function CreateBillInstanceDialog({
         dueDate: formatDateForSaving(values.dueDate),
         description: values.description,
       });
-      toast.success("Bill instance created successfully!");
-      form.reset();
-      setOpen(false);
+
+      if (result.success) {
+        toast.success("Bill instance created successfully!");
+        form.reset();
+        setOpen(false);
+      } else {
+        toast.error(result.error || "Failed to create bill instance.");
+      }
     } catch {
       toast.error("Failed to create bill instance. Please try again");
     }

@@ -15,7 +15,7 @@ export const createProfile = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const profile = {
@@ -28,7 +28,7 @@ export const createProfile = mutation({
 
     const profileId = await ctx.db.insert("profiles", profile);
 
-    return profileId;
+    return { success: true, data: profileId };
   },
 });
 
@@ -38,7 +38,7 @@ export const getProfilesForUser = query({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const profiles = await ctx.db
@@ -62,7 +62,7 @@ export const getProfilesForUser = query({
       })
     );
 
-    return profilesWithCount;
+    return { success: true, data: profilesWithCount };
   },
 });
 
@@ -74,13 +74,13 @@ export const getProfile = query({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const profile = await ctx.db.get(args.id);
 
     if (!profile) {
-      throw new Error("Profile not found");
+      return { success: false, error: "Profile not found" };
     }
 
     // Get the actual count of bills for this profile
@@ -91,8 +91,11 @@ export const getProfile = query({
       .collect();
 
     return {
-      ...profile,
-      billCount: bills.length,
+      success: true,
+      data: {
+        ...profile,
+        billCount: bills.length,
+      },
     };
   },
 });
@@ -114,17 +117,17 @@ export const updateProfile = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const profile = await ctx.db.get(args.id);
 
     if (!profile) {
-      throw new Error("Profile not found");
+      return { success: false, error: "Profile not found" };
     }
 
     if (profile.userId !== identity.tokenIdentifier) {
-      throw new Error("Unauthorized to update this profile");
+      return { success: false, error: "Unauthorized to update this profile" };
     }
 
     const updatedProfile = await ctx.db.patch(args.id, {
@@ -134,7 +137,7 @@ export const updateProfile = mutation({
       color: args.color ?? profile.color,
     });
 
-    return updatedProfile;
+    return { success: true, data: updatedProfile };
   },
 });
 
@@ -147,24 +150,24 @@ export const updateProfileColor = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const profile = await ctx.db.get(args.id);
 
     if (!profile) {
-      throw new Error("Profile not found");
+      return { success: false, error: "Profile not found" };
     }
 
     if (profile.userId !== identity.tokenIdentifier) {
-      throw new Error("Unauthorized to update this profile");
+      return { success: false, error: "Unauthorized to update this profile" };
     }
 
     const updatedProfile = await ctx.db.patch(args.id, {
       color: args.color,
     });
 
-    return updatedProfile;
+    return { success: true, data: updatedProfile };
   },
 });
 
@@ -176,17 +179,17 @@ export const deleteProfile = mutation({
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
     }
 
     const profile = await ctx.db.get(args.id);
 
     if (!profile) {
-      throw new Error("Profile not found");
+      return { success: false, error: "Profile not found" };
     }
 
     if (profile.userId !== identity.tokenIdentifier) {
-      throw new Error("Unauthorized to delete this profile");
+      return { success: false, error: "Unauthorized to delete this profile" };
     }
 
     await ctx.db.delete(args.id);

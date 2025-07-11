@@ -26,22 +26,25 @@ export default function Calendar() {
   const profileId = searchParams.get("profileId") as Id<"profiles"> | null;
 
   // Fetch bill instances - either all or filtered by profile
-  const allInstances = useQuery(
+  const allInstancesResult = useQuery(
     api.billInstances.getAllBillInstancesWithBillNames,
     profileId ? "skip" : undefined,
   );
-  const profileInstances = useQuery(
+  const profileInstancesResult = useQuery(
     api.billInstances.getBillInstancesWithBillNamesByProfile,
     profileId ? { profileId } : "skip",
   );
 
-  const instances = profileId ? profileInstances || [] : allInstances || [];
+  const instancesResult = profileId ? profileInstancesResult : allInstancesResult;
+  const instances = instancesResult?.success ? instancesResult.data || [] : [];
 
   // Get profile info if filtering by profile
-  const profile = useQuery(
+  const profileResult = useQuery(
     api.profiles.getProfile,
     profileId ? { id: profileId } : "skip",
   );
+
+  const profile = profileResult?.success ? profileResult.data : null;
 
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) => {
@@ -67,10 +70,33 @@ export default function Calendar() {
   });
 
   // Show loading state while fetching data
-  if (instances === undefined || (profileId && profile === undefined)) {
+  if (!instancesResult || (profileId && !profileResult)) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show error state if data failed to load
+  if (!instancesResult.success) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Error loading calendar data</p>
+          <p className="text-muted-foreground">{instancesResult.error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (profileId && profileResult && !profileResult.success) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Error loading profile</p>
+          <p className="text-muted-foreground">{profileResult.error}</p>
+        </div>
       </div>
     );
   }

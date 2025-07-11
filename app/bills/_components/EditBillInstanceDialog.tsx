@@ -69,7 +69,7 @@ export function EditBillInstanceDialog({
 
   const onSubmit = async (values: BillInstanceFormValues) => {
     try {
-      await updateBillInstance({
+      const result = await updateBillInstance({
         id: billInstance._id,
         month: values.month.toLocaleDateString("en-US", {
           month: "long",
@@ -79,8 +79,13 @@ export function EditBillInstanceDialog({
         dueDate: formatDateForSaving(values.dueDate),
         description: values.description,
       });
-      toast.success("Bill instance updated successfully!");
-      setOpen(false);
+
+      if (result.success) {
+        toast.success("Bill instance updated successfully!");
+        setOpen(false);
+      } else {
+        toast.error(result.error || "Failed to update bill instance.");
+      }
     } catch {
       toast.error("Failed to update bill instance. Please try again.");
     }

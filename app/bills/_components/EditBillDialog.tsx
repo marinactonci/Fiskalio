@@ -72,15 +72,19 @@ export function EditBillDialog({ bill, onBillUpdated }: EditBillDialogProps) {
             }
           : undefined;
 
-      await updateBill({
+      const result = await updateBill({
         id: bill._id,
         name: values.name,
         eBill: eBillData,
       });
 
-      toast.success('Bill updated successfully!');
-      setOpen(false);
-      onBillUpdated?.();
+      if (result.success) {
+        toast.success('Bill updated successfully!');
+        setOpen(false);
+        onBillUpdated?.();
+      } else {
+        toast.error(result.error || 'Failed to update bill.');
+      }
     } catch {
       toast.error('Failed to update bill. Please try again.');
     }

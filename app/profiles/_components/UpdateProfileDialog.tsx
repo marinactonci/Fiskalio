@@ -58,7 +58,7 @@ function UpdateProfileDialog({ profile }: UpdateProfileDialogProps) {
 
   const onSubmit = async (values: ProfileFormValues) => {
     try {
-      await updateProfile({
+      const result = await updateProfile({
         id: profile._id,
         name: values.name,
         address: {
@@ -68,8 +68,13 @@ function UpdateProfileDialog({ profile }: UpdateProfileDialogProps) {
         },
         color: values.color,
       });
-      toast.success('Profile updated successfully!');
-      setOpen(false);
+
+      if (result.success) {
+        toast.success('Profile updated successfully!');
+        setOpen(false);
+      } else {
+        toast.error(result.error || 'Failed to update profile.');
+      }
     } catch {
       toast.error('Failed to update profile. Please try again.');
     }

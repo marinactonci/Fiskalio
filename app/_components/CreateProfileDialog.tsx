@@ -55,7 +55,7 @@ export function CreateProfileDialog() {
 
   const onSubmit = async (values: ProfileFormValues) => {
     try {
-      await createProfile({
+      const result = await createProfile({
         name: values.name,
         address: {
           street: values.streetAddress,
@@ -64,9 +64,14 @@ export function CreateProfileDialog() {
         },
         color: values.color,
       });
-      toast.success("Profile created successfully!");
-      form.reset();
-      setOpen(false);
+
+      if (result.success) {
+        toast.success("Profile created successfully!");
+        form.reset();
+        setOpen(false);
+      } else {
+        toast.error(result.error || "Failed to create profile.");
+      }
     } catch {
       toast.error("Failed to create profile. Please try again.");
     }

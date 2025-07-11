@@ -8,15 +8,28 @@ import { CreateProfileDialog } from "@/app/_components/CreateProfileDialog";
 import ProfileCard from "@/app/_components/ProfileCard";
 
 export default function Home() {
-  const profiles = useQuery(api.profiles.getProfilesForUser);
+  const profilesResult = useQuery(api.profiles.getProfilesForUser);
 
-  if (!profiles) {
+  if (!profilesResult) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
+
+  if (!profilesResult.success) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Error loading profiles</p>
+          <p className="text-muted-foreground">{profilesResult.error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const profiles = profilesResult.data || [];
 
   return (
     <div className="space-y-8">

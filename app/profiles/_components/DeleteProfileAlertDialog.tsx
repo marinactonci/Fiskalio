@@ -16,6 +16,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import type { Profile } from "@/convex/schema";
+import { useRouter } from "next/navigation";
 
 interface DeleteProfileAlertDialogProps {
   profile: Profile;
@@ -25,11 +26,20 @@ function DeleteProfileAlertDialog({ profile }: DeleteProfileAlertDialogProps) {
   const [loading, setLoading] = React.useState(false);
   const deleteProfileMutation = useMutation(api.profiles.deleteProfile);
 
+  const router = useRouter();
+
   const deleteProfile = async () => {
     setLoading(true);
     try {
-      await deleteProfileMutation({ id: profile._id });
-    } catch {
+      const result = await deleteProfileMutation({ id: profile._id });
+
+      if (result.success) {
+        toast.success("Profile deleted successfully.");
+        router.push("/profiles");
+      } else {
+        toast.error(result.error || "Failed to delete profile.");
+      }
+    } catch (error) {
       toast.error("Failed to delete profile.");
     } finally {
       setLoading(false);

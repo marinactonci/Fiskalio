@@ -21,12 +21,12 @@ interface ProfileDashboardProps {
 }
 
 export function ProfileDashboard({ profileId, bills }: ProfileDashboardProps) {
-  const billInstancesWithNames = useQuery(
+  const billInstancesResult = useQuery(
     api.billInstances.getBillInstancesWithBillNamesByProfile,
     { profileId },
   );
 
-  if (!billInstancesWithNames) {
+  if (!billInstancesResult) {
     return (
       <div className="space-y-6">
         <div>
@@ -44,6 +44,24 @@ export function ProfileDashboard({ profileId, bills }: ProfileDashboardProps) {
       </div>
     );
   }
+
+  if (!billInstancesResult.success) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold mb-4">Profile Overview</h2>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <p className="text-red-500 mb-2">Error loading bill instances</p>
+              <p className="text-muted-foreground text-sm">{billInstancesResult.error}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const billInstancesWithNames = billInstancesResult.data || [];
 
   const currentDate = new Date();
   const currentMonth = format(currentDate, "yyyy-MM");

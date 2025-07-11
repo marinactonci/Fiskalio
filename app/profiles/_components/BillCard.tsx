@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import Link from "next/link";
+import { decryptString } from "@/lib/utils";
 
 interface BillCardProps {
   bill: Bill;
@@ -34,7 +35,7 @@ function BillCard({ bill }: BillCardProps) {
           )}
           {bill.eBill?.username && (
             <p className="text-sm text-muted-foreground dark:text-slate-400 mb-2">
-              👤 {bill.eBill.username}
+              👤 {decryptString(bill.eBill.username)}
             </p>
           )}
           <div className="flex items-center justify-between mt-4 pt-4 border-t">

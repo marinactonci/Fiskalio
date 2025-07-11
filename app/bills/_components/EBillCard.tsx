@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Bill } from "@/convex/schema";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { decryptString } from "@/lib/utils";
 
 interface EBillCardProps {
   eBill: Bill["eBill"];
@@ -69,14 +70,19 @@ function EBillCard({ eBill }: EBillCardProps) {
           <div className="flex items-center space-x-2 mt-1">
             <Input
               id="ebill-username"
-              value={eBill?.username || ""}
+              value={decryptString(eBill?.username || "")}
               readOnly
               className="flex-1"
             />
             <Button
               size="sm"
               variant="outline"
-              onClick={() => copyToClipboard(eBill?.username || "", "Username")}
+              onClick={() =>
+                copyToClipboard(
+                  decryptString(eBill?.username || ""),
+                  "Username",
+                )
+              }
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -91,7 +97,7 @@ function EBillCard({ eBill }: EBillCardProps) {
             <Input
               id="ebill-password"
               type={showPassword ? "text" : "password"}
-              value={eBill?.password || ""}
+              value={decryptString(eBill?.password || "")}
               readOnly
               className="flex-1"
             />
@@ -110,7 +116,10 @@ function EBillCard({ eBill }: EBillCardProps) {
               size="sm"
               variant="outline"
               onClick={() =>
-                copyToClipboard(eBill?.password || "", "Password")
+                copyToClipboard(
+                  decryptString(eBill?.password || ""),
+                  "Password",
+                )
               }
             >
               <Copy className="h-4 w-4" />

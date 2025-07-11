@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { encryptString } from "@/lib/utils";
 
 const billSchema = z.object({
   name: z.string().min(1, "Bill name is required"),
@@ -65,8 +66,8 @@ function CreateBillDialog({ text, profileId }: CreateBillDialogProps) {
         values.website || values.username || values.password
           ? {
               link: values.website || "",
-              username: values.username || "",
-              password: values.password || "",
+              username: encryptString(values.username || ""),
+              password: encryptString(values.password || ""),
             }
           : undefined;
 
@@ -79,7 +80,8 @@ function CreateBillDialog({ text, profileId }: CreateBillDialogProps) {
       toast.success("Bill created successfully!");
       form.reset();
       setOpen(false);
-    } catch {
+    } catch (error) {
+      console.error("Error creating bill:", error);
       toast.error("Failed to create bill. Please try again.");
     }
   };

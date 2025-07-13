@@ -46,6 +46,13 @@ export default function Calendar() {
 
   const profile = profileResult?.success ? profileResult.data : null;
 
+  // Get all profiles for color legend (only when not filtering by specific profile)
+  const allProfilesResult = useQuery(
+    api.profiles.getProfilesForUser,
+    !profileId ? undefined : "skip",
+  );
+  const allProfiles = allProfilesResult?.success ? allProfilesResult.data || [] : [];
+
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) => {
       const newDate = new Date(prev);
@@ -211,6 +218,27 @@ export default function Calendar() {
               {instances.filter((i) => !i.isPaid).length} Unpaid
             </Badge>
           </div>
+
+          {/* Color Legend - only show when viewing all profiles */}
+          {!profileId && allProfiles.length > 0 && (
+            <div className="flex flex-col space-y-2 lg:items-end">
+              <div className="text-xs text-muted-foreground font-medium">Profile Colors:</div>
+              <div className="flex flex-wrap gap-2">
+                {allProfiles.map((prof) => (
+                  <div
+                    key={prof._id}
+                    className="flex items-center space-x-1 text-xs"
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full border border-gray-300"
+                      style={{ backgroundColor: prof.color }}
+                    />
+                    <span className="text-muted-foreground">{prof.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

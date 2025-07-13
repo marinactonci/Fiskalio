@@ -43,10 +43,14 @@ function CalendarGridBillInstanceItem({
         onClick={() => handleInstanceClick(instance)}
         style={{
           backgroundColor: instance.profileColor,
-          borderColor: instance.isPaid ? '#22c55e' : isOverdue ? '#ef4444' : '#eab308',
-          borderWidth: '2px',
+          borderColor: instance.isPaid
+            ? "#22c55e"
+            : isOverdue
+              ? "#ef4444"
+              : "#eab308",
+          borderWidth: "2px",
         }}
-        title={`${instance.description} - $${instance.amount.toFixed(0)} ${instance.isPaid ? '(Paid)' : isOverdue ? '(Overdue)' : '(Pending)'}`}
+        title={`${instance.description} - $${instance.amount.toFixed(0)} ${instance.isPaid ? "(Paid)" : isOverdue ? "(Overdue)" : "(Pending)"}`}
       >
         {instance.isPaid && (
           <span className="text-white text-[8px] font-bold">✓</span>
@@ -60,20 +64,23 @@ function CalendarGridBillInstanceItem({
         style={{
           borderLeftColor: instance.profileColor,
           backgroundColor: instance.isPaid
-            ? '#f0fdf4'
+            ? "#f0fdf4"
             : isOverdue
-              ? '#fef2f2'
-              : '#fefce8',
+              ? "#fef2f2"
+              : "#fefce8",
           color: instance.isPaid
-            ? '#166534'
+            ? "#166534"
             : isOverdue
-              ? '#991b1b'
-              : '#854d0e',
+              ? "#991b1b"
+              : "#854d0e",
         }}
       >
         <div className="font-medium truncate">{instance.description}</div>
         <div className="flex items-center justify-between">
-          <span>${instance.amount.toFixed(0)}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs">{instance.billName}</span>
+            <span>${instance.amount.toFixed(0)}</span>
+          </div>
           <div className="flex items-center gap-1">
             {instance.isPaid && <span>✓</span>}
             <div

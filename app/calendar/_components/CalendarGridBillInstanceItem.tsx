@@ -75,7 +75,6 @@ function CalendarGridBillInstanceItem({
               : "#854d0e",
         }}
       >
-        <div className="font-medium truncate">{instance.description}</div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xs">{instance.billName}</span>
@@ -90,6 +89,7 @@ function CalendarGridBillInstanceItem({
             />
           </div>
         </div>
+        <div className="font-medium truncate">{instance.description}</div>
       </div>
     </>
   );

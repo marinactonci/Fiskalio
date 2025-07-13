@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Check, X, Calendar, Euro } from "lucide-react";
 import type { BillInstance } from "@/convex/schema";
@@ -37,6 +38,7 @@ export function QuickEditInstanceDialog({
   billInstance,
 }: QuickEditInstanceDialogProps) {
   const [amount, setAmount] = useState(billInstance.amount.toString());
+  const [description, setDescription] = useState(billInstance.description || "");
   const [loading, setLoading] = useState(false);
 
   const updateBillInstance = useMutation(api.billInstances.updateBillInstance);
@@ -84,6 +86,29 @@ export function QuickEditInstanceDialog({
       if (result.success) {
         onOpenChange(false);
         toast.success("Amount updated successfully");
+      } else {
+        toast.error(result.error || "Failed to update bill instance");
+      }
+    } catch (error) {
+      console.error("Error updating instance:", error);
+      toast.error("Failed to update bill instance");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateDescription = async () => {
+    setLoading(true);
+    try {
+      console.log("Updating description for instance:", billInstance._id, description);
+      const result = await updateBillInstance({
+        id: billInstance._id,
+        description: description.trim(),
+      });
+
+      if (result.success) {
+        onOpenChange(false);
+        toast.success("Description updated successfully");
       } else {
         toast.error(result.error || "Failed to update bill instance");
       }
@@ -185,9 +210,31 @@ export function QuickEditInstanceDialog({
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <div className="flex space-x-2">
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter bill description..."
+                className="min-h-[80px] resize-none"
+              />
+              <div className="flex flex-col space-y-2">
+                <Button
+                  onClick={updateDescription}
+                  disabled={loading || description === (billInstance.description || "")}
+                  variant="outline"
+                >
+                  Update
+                </Button>
+              </div>
+            </div>
+          </div>
+
           {billInstance.description && (
             <div className="p-3 rounded-lg bg-muted/20">
-              <p className="text-sm font-medium mb-1">Description</p>
+              <p className="text-sm font-medium mb-1">Current Description</p>
               <p className="text-sm text-muted-foreground">
                 {billInstance.description}
               </p>

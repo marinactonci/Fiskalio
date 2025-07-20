@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge, badgeVariants } from "@/components/ui/badge";
-import { Check, X, Calendar, Euro } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Check, Calendar, Euro } from "lucide-react";
 import type { BillInstance } from "@/convex/schema";
 import { toast } from "sonner";
 import { useMutation } from "convex/react";
@@ -38,37 +39,29 @@ export function QuickEditInstanceDialog({
   billInstance,
 }: QuickEditInstanceDialogProps) {
   const [amount, setAmount] = useState(billInstance.amount.toString());
-  const [description, setDescription] = useState(billInstance.description || "");
+  const [description, setDescription] = useState(
+    billInstance.description || "",
+  );
+  const [isPaid, setIsPaid] = useState(billInstance.isPaid);
   const [loading, setLoading] = useState(false);
 
   const updateBillInstance = useMutation(api.billInstances.updateBillInstance);
 
-  const togglePaidStatus = async () => {
-    setLoading(true);
-    try {
-      console.log("Toggling paid status for instance:", billInstance._id);
-      const result = await updateBillInstance({
-        id: billInstance._id,
-        isPaid: !billInstance.isPaid,
-      });
-
-      if (result.success) {
-        onOpenChange(false);
-        toast.success(
-          `Bill marked as ${!billInstance.isPaid ? "paid" : "unpaid"}`,
-        );
-      } else {
-        toast.error(result.error || "Failed to update bill instance");
-      }
-    } catch (error) {
-      console.error("Error updating instance:", error);
-      toast.error("Failed to update bill instance");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (open) {
+      setAmount(billInstance.amount.toString());
+      setDescription(billInstance.description || "");
+      setIsPaid(billInstance.isPaid);
     }
-  };
+  }, [
+    billInstance._id,
+    billInstance.amount,
+    billInstance.description,
+    billInstance.isPaid,
+    open,
+  ]);
 
-  const updateAmount = async () => {
+  const saveChanges = async () => {
     const newAmount = parseFloat(amount);
     if (isNaN(newAmount) || newAmount <= 0) {
       toast.error("Please enter a valid amount");
@@ -77,38 +70,17 @@ export function QuickEditInstanceDialog({
 
     setLoading(true);
     try {
-      console.log("Updating amount for instance:", billInstance._id, newAmount);
+      console.log("Saving changes for instance:", billInstance._id);
       const result = await updateBillInstance({
         id: billInstance._id,
         amount: newAmount,
-      });
-
-      if (result.success) {
-        onOpenChange(false);
-        toast.success("Amount updated successfully");
-      } else {
-        toast.error(result.error || "Failed to update bill instance");
-      }
-    } catch (error) {
-      console.error("Error updating instance:", error);
-      toast.error("Failed to update bill instance");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateDescription = async () => {
-    setLoading(true);
-    try {
-      console.log("Updating description for instance:", billInstance._id, description);
-      const result = await updateBillInstance({
-        id: billInstance._id,
         description: description.trim(),
+        isPaid: isPaid,
       });
 
       if (result.success) {
         onOpenChange(false);
-        toast.success("Description updated successfully");
+        toast.success("Bill instance updated successfully");
       } else {
         toast.error(result.error || "Failed to update bill instance");
       }
@@ -119,6 +91,11 @@ export function QuickEditInstanceDialog({
       setLoading(false);
     }
   };
+
+  const hasChanges =
+    amount !== billInstance.amount.toString() ||
+    description !== (billInstance.description || "") ||
+    isPaid !== billInstance.isPaid;
 
   const isOverdue =
     !billInstance.isPaid && new Date(billInstance.dueDate) < new Date();
@@ -186,10 +163,10 @@ export function QuickEditInstanceDialog({
             </Badge>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount (€)</Label>
-            <div className="flex space-x-2">
-              <div className="relative flex-1">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount (€)</Label>
+              <div className="relative">
                 <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="amount"
@@ -200,19 +177,10 @@ export function QuickEditInstanceDialog({
                   className="pl-9"
                 />
               </div>
-              <Button
-                onClick={updateAmount}
-                disabled={loading || amount === billInstance.amount.toString()}
-                variant="outline"
-              >
-                Update
-              </Button>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <div className="flex space-x-2">
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
                 value={description}
@@ -220,15 +188,16 @@ export function QuickEditInstanceDialog({
                 placeholder="Enter bill description..."
                 className="min-h-[80px] resize-none"
               />
-              <div className="flex flex-col space-y-2">
-                <Button
-                  onClick={updateDescription}
-                  disabled={loading || description === (billInstance.description || "")}
-                  variant="outline"
-                >
-                  Update
-                </Button>
-              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="paid-status">Mark as Paid</Label>
+              <Switch
+                id="paid-status"
+                checked={isPaid}
+                onCheckedChange={setIsPaid}
+                disabled={loading}
+              />
             </div>
           </div>
 
@@ -251,25 +220,16 @@ export function QuickEditInstanceDialog({
             Close
           </Button>
           <Button
-            onClick={togglePaidStatus}
-            disabled={loading}
-            className={
-              billInstance.isPaid
-                ? "bg-red-600 hover:bg-red-700 text-white"
-                : "bg-green-600 hover:bg-green-700 text-white"
-            }
+            onClick={saveChanges}
+            disabled={loading || !hasChanges}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             {loading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-            ) : billInstance.isPaid ? (
-              <>
-                <X className="h-4 w-4 mr-2" />
-                Mark Unpaid
-              </>
             ) : (
               <>
                 <Check className="h-4 w-4 mr-2" />
-                Mark Paid
+                Save Changes
               </>
             )}
           </Button>

@@ -79,7 +79,7 @@ export function CalendarGrid({
               return (
                 <div
                   key={day.toISOString()}
-                  className={`min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border rounded-lg transition-colors ${
+                  className={`min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border rounded-lg transition-colors min-w-0 max-w-full overflow-hidden ${
                     isCurrentMonth
                       ? "bg-background/50 border-border/50"
                       : "bg-muted/20 border-muted/30"
@@ -95,7 +95,7 @@ export function CalendarGrid({
                     {format(day, "d")}
                   </div>
 
-                  <div className="flex flex-wrap gap-0.5 sm:flex-col sm:space-y-1">
+                  <div className="flex flex-wrap sm:flex-col gap-0.5 sm:space-y-1 w-full min-w-0">
                     {dayInstances.map((instance) => {
                       return (
                         <CalendarGridBillInstanceItem

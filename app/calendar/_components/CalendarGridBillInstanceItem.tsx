@@ -39,7 +39,7 @@ function CalendarGridBillInstanceItem({
     <>
       {/* Mobile view - compact circles */}
       <div
-        className="sm:hidden w-4 h-4 rounded-full cursor-pointer transition-all hover:scale-110 border flex items-center justify-center"
+        className="sm:hidden w-4 h-4 min-w-0 max-w-full rounded-full cursor-pointer transition-all hover:scale-110 border flex items-center justify-center"
         onClick={() => handleInstanceClick(instance)}
         style={{
           backgroundColor: instance.profileColor,
@@ -59,7 +59,7 @@ function CalendarGridBillInstanceItem({
 
       {/* Desktop view - full cards */}
       <div
-        className="hidden sm:block p-1 rounded text-xs cursor-pointer transition-all hover:scale-105 hover:shadow-sm border-l-4"
+        className="hidden sm:block p-1 rounded text-xs cursor-pointer transition-all hover:scale-105 hover:shadow-sm border-l-4 max-w-full min-w-0"
         onClick={() => handleInstanceClick(instance)}
         style={{
           borderLeftColor: instance.profileColor,
@@ -75,9 +75,9 @@ function CalendarGridBillInstanceItem({
               : "#854d0e",
         }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xs">{instance.billName}</span>
+        <div className="flex items-center justify-between min-w-0">
+          <div className="flex items-center gap-2 min-w-0 max-w-full truncate">
+            <span className="text-xs truncate">{instance.billName}</span>
             <span>${instance.amount.toFixed(0)}</span>
           </div>
           <div className="flex items-center gap-1">
@@ -89,7 +89,11 @@ function CalendarGridBillInstanceItem({
             />
           </div>
         </div>
-        <div className="font-medium truncate">{instance.description}</div>
+
+        {/* This line is key */}
+        <div className="font-medium truncate max-w-full min-w-0">
+          {instance.description}
+        </div>
       </div>
     </>
   );

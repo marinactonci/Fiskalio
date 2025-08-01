@@ -37,6 +37,11 @@ function Navbar() {
       label: "Calendar",
       isActive: pathname === "/calendar",
     },
+    {
+      href: "/analytics",
+      label: "Analytics",
+      isActive: pathname === "/analytics",
+    },
   ];
 
   return (
@@ -66,7 +71,9 @@ function Navbar() {
                   <div className="flex-1 px-6 py-4">
                     {/* Navigation Links */}
                     <div className="mb-6">
-                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Navigation</h3>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                        Navigation
+                      </h3>
                       <nav>
                         <ul className="flex flex-col space-y-1">
                           {links.map((link) => (
@@ -93,7 +100,9 @@ function Navbar() {
 
                     {/* Theme Toggle */}
                     <div className="mb-6">
-                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Preferences</h3>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                        Preferences
+                      </h3>
                       <div className="flex items-center justify-between px-3 py-2">
                         <span className="text-sm">Theme</span>
                         <ModeToggle />
@@ -103,10 +112,14 @@ function Navbar() {
                     {/* User Authentication - Only show for unauthenticated users */}
                     <Unauthenticated>
                       <div>
-                        <h3 className="text-sm font-medium text-muted-foreground mb-3">Account</h3>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                          Account
+                        </h3>
                         <div className="flex flex-col gap-2">
                           <SignInButton>
-                            <Button variant="outline" className="w-full">Sign in</Button>
+                            <Button variant="outline" className="w-full">
+                              Sign in
+                            </Button>
                           </SignInButton>
                           <SignUpButton>
                             <Button className="w-full">Sign up</Button>

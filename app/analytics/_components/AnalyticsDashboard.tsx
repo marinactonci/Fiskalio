@@ -230,7 +230,7 @@ function BillStatusChart({ data }: BillStatusChartProps) {
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300"];
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Bill Status Distribution</CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -333,10 +333,16 @@ export default function AnalyticsDashboard() {
   const statusData = billStatusData.data!;
   const profiles = profilesData.data || [];
 
+  // Reverse monthly data so latest month appears on the right
+  const reversedMonthlyData = {
+    ...monthlyData,
+    monthlyData: [...monthlyData.monthlyData].reverse(),
+  };
+
   const filteredMonthlyData =
     selectedProfile === "all"
-      ? monthlyData.monthlyData
-      : monthlyData.monthlyData.map((item) => ({
+      ? reversedMonthlyData.monthlyData
+      : reversedMonthlyData.monthlyData.map((item) => ({
           month: item.month,
           [selectedProfile]: item[selectedProfile] || 0,
           total: (item[selectedProfile] as number) || 0,
@@ -418,7 +424,7 @@ export default function AnalyticsDashboard() {
             <div className="xl:col-span-2">
               <MonthlyCostChart
                 data={filteredMonthlyData}
-                profiles={monthlyData.profiles}
+                profiles={reversedMonthlyData.profiles}
                 selectedProfile={selectedProfile}
                 onProfileSelect={setSelectedProfile}
               />
@@ -431,8 +437,8 @@ export default function AnalyticsDashboard() {
 
         <TabsContent value="trends">
           <MonthlyComparison
-            data={monthlyData.monthlyData}
-            profiles={monthlyData.profiles}
+            data={reversedMonthlyData.monthlyData}
+            profiles={reversedMonthlyData.profiles}
           />
         </TabsContent>
 

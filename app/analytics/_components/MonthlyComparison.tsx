@@ -23,6 +23,9 @@ interface MonthlyComparisonProps {
 }
 
 function MonthlyComparison({ data, profiles }: MonthlyComparisonProps) {
+  // Reverse the data so latest month appears on the right
+  const reversedData = [...data].reverse();
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -71,10 +74,10 @@ function MonthlyComparison({ data, profiles }: MonthlyComparisonProps) {
 
   // Calculate month-over-month growth
   const calculateGrowth = () => {
-    if (data.length < 2) return null;
+    if (reversedData.length < 2) return null;
 
-    const current = data[data.length - 1];
-    const previous = data[data.length - 2];
+    const current = reversedData[reversedData.length - 1];
+    const previous = reversedData[reversedData.length - 2];
 
     if (!current || !previous) return null;
 
@@ -95,14 +98,14 @@ function MonthlyComparison({ data, profiles }: MonthlyComparisonProps) {
   const growth = calculateGrowth();
 
   // Find highest spending month
-  const highestMonth = data.reduce(
+  const highestMonth = reversedData.reduce(
     (max, current) => (current.total > max.total ? current : max),
-    data[0] || { month: "", total: 0 },
+    reversedData[0] || { month: "", total: 0 },
   );
 
   // Calculate average monthly spending
   const averageSpending =
-    data.reduce((sum, item) => sum + item.total, 0) / data.length;
+    reversedData.reduce((sum, item) => sum + item.total, 0) / reversedData.length;
 
   return (
     <div className="space-y-6">
@@ -164,7 +167,7 @@ function MonthlyComparison({ data, profiles }: MonthlyComparisonProps) {
                 {formatCurrency(averageSpending)}
               </p>
               <p className="text-xs text-muted-foreground">
-                {data.length} month{data.length !== 1 ? "s" : ""} average
+                {reversedData.length} month{reversedData.length !== 1 ? "s" : ""} average
               </p>
             </div>
           </CardContent>
@@ -188,7 +191,7 @@ function MonthlyComparison({ data, profiles }: MonthlyComparisonProps) {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
-                <AreaChart data={data}>
+                <AreaChart data={reversedData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" tickFormatter={formatMonth} />
                   <YAxis tickFormatter={formatCurrency} />
@@ -226,7 +229,7 @@ function MonthlyComparison({ data, profiles }: MonthlyComparisonProps) {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={data}>
+                <BarChart data={reversedData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" tickFormatter={formatMonth} />
                   <YAxis tickFormatter={formatCurrency} />

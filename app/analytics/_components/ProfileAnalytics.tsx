@@ -100,7 +100,7 @@ function ProfileAnalytics({ profiles }: ProfileAnalyticsProps) {
   }
 
   const data = profileData.data!;
-  const monthlyData = data.monthlyData;
+  const monthlyData = [...data.monthlyData].reverse(); // Reverse so latest month is on the right
 
   // Calculate analytics
   const totalSpent = monthlyData.reduce((sum, item) => sum + item.total, 0);

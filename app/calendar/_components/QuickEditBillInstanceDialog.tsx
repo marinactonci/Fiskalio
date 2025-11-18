@@ -124,6 +124,7 @@ export function QuickEditInstanceDialog({
             <Link
               className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-purple-700"
               href={`/bills/${billInstance.billId}`}
+              onClick={() => !open}
             >
               {billInstance.billName}
             </Link>
@@ -132,8 +133,9 @@ export function QuickEditInstanceDialog({
                 href={`/profiles/${billInstance.profileId}`}
                 className={cn(
                   badgeVariants({ variant: "outline" }),
-                  "text-xs flex items-center gap-1",
+                  "text-xs flex items-center gap-1 bg-muted",
                 )}
+                onClick={() => !open}
               >
                 <div
                   className="w-2 h-2 rounded-full"
@@ -149,7 +151,7 @@ export function QuickEditInstanceDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
             <div className="flex items-center space-x-3">
               <CalendarIcon className="h-5 w-5 text-muted-foreground" />
               <div>
@@ -250,7 +252,7 @@ export function QuickEditInstanceDialog({
           </div>
 
           {billInstance.description && (
-            <div className="p-3 rounded-lg bg-muted/20">
+            <div className="p-3 rounded-lg bg-muted">
               <p className="text-sm font-medium mb-1">Current Description</p>
               <p className="text-sm text-muted-foreground">
                 {billInstance.description}

@@ -41,7 +41,7 @@ const schema = defineSchema({
     userId: v.string(),
   })
     .index("by_bill", ["billId"])
-    .index("by_month_user", ["month", "userId"]), // For calendar view
+    .index("by_month_user", ["month", "userId"]),
 });
 
 export default schema;

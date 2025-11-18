@@ -135,7 +135,7 @@ export function BillInstanceCard({ billInstance }: BillInstanceCardProps) {
             </p>
           )}
 
-          <div className="flex items-center justify-between border-t pt-3">
+          <div className="flex items-center justify-between border-t pt-3 flex-wrap gap-2">
             <div className="flex items-center space-x-2">
               <EditBillInstanceDialog billInstance={billInstance} />
               <DeleteBillInstanceAlertDialog billInstance={billInstance} />

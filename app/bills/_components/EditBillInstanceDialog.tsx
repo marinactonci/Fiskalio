@@ -36,13 +36,8 @@ import { api } from "@/convex/_generated/api";
 import type { BillInstance } from "@/convex/schema";
 import { cn, formatDateForSaving } from "@/lib/utils";
 import { format } from "date-fns";
-
-const billInstanceSchema = z.object({
-  month: z.date({ required_error: "Month is required" }),
-  amount: z.number().min(0.01, "Amount must be greater than 0"),
-  dueDate: z.date({ required_error: "Due date is required" }),
-  description: z.string().optional(),
-});
+import { billInstanceSchema } from "@/schemas/billInstance";
+import { Switch } from "@/components/ui/switch";
 
 type BillInstanceFormValues = z.infer<typeof billInstanceSchema>;
 
@@ -61,9 +56,9 @@ export function EditBillInstanceDialog({
     defaultValues: {
       month: new Date(billInstance.month),
       amount: billInstance.amount,
-      // Parse date string as local date to avoid timezone issues
       dueDate: new Date(billInstance.dueDate + "T00:00:00"),
       description: billInstance.description || "",
+      isPaid: billInstance.isPaid,
     },
   });
 
@@ -158,6 +153,7 @@ export function EditBillInstanceDialog({
                     <Input
                       placeholder="0.00"
                       step="0.01"
+                      className="bg-background"
                       type="number"
                       {...field}
                       onChange={(e) =>
@@ -217,12 +213,30 @@ export function EditBillInstanceDialog({
                   <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      className="resize-none"
+                      className="resize-none bg-background"
                       placeholder="Additional notes about this bill instance..."
                       {...field}
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isPaid"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-xs bg-background">
+                  <div className="space-y-0.5">
+                    <FormLabel>Mark as Paid</FormLabel>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

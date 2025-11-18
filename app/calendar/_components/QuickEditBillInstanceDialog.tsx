@@ -1,5 +1,12 @@
-import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "convex/react";
+import { Check, Calendar as CalendarIcon, Euro } from "lucide-react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -8,25 +15,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge, badgeVariants } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Check, Calendar as CalendarIcon, Euro } from "lucide-react";
-import type { BillInstance } from "@/convex/schema";
-import { toast } from "sonner";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Badge, badgeVariants } from "@/components/ui/badge";
+import { api } from "@/convex/_generated/api";
+import type { BillInstance } from "@/convex/schema";
+import { cn, formatDateForSaving } from "@/lib/utils";
+import { format } from "date-fns";
+import { billInstanceSchema } from "@/schemas/billInstance";
+import Link from "next/link";
+
+type BillInstanceFormValues = z.infer<typeof billInstanceSchema>;
 
 interface QuickEditInstanceDialogProps {
   open: boolean;
@@ -44,77 +58,58 @@ export function QuickEditInstanceDialog({
   onOpenChange,
   billInstance,
 }: QuickEditInstanceDialogProps) {
-  const [amount, setAmount] = useState(billInstance.amount.toString());
-  const [dueDate, setDueDate] = useState(billInstance.dueDate);
-  const [description, setDescription] = useState(
-    billInstance.description || "",
-  );
-  const [isPaid, setIsPaid] = useState(billInstance.isPaid);
-  const [loading, setLoading] = useState(false);
-
   const updateBillInstance = useMutation(api.billInstances.updateBillInstance);
+
+  const form = useForm<BillInstanceFormValues>({
+    resolver: zodResolver(billInstanceSchema),
+    defaultValues: {
+      month: new Date(billInstance.month),
+      amount: billInstance.amount,
+      dueDate: new Date(billInstance.dueDate + "T00:00:00"),
+      description: billInstance.description || "",
+      isPaid: billInstance.isPaid,
+    },
+  });
 
   useEffect(() => {
     if (open) {
-      setAmount(billInstance.amount.toString());
-      setDueDate(billInstance.dueDate);
-      setDescription(billInstance.description || "");
-      setIsPaid(billInstance.isPaid);
+      form.reset({
+        month: new Date(billInstance.month),
+        amount: billInstance.amount,
+        dueDate: new Date(billInstance.dueDate + "T00:00:00"),
+        description: billInstance.description || "",
+        isPaid: billInstance.isPaid,
+      });
     }
-  }, [
-    billInstance._id,
-    billInstance.amount,
-    billInstance.dueDate,
-    billInstance.description,
-    billInstance.isPaid,
-    open,
-  ]);
+  }, [billInstance, open, form]);
 
-  const saveChanges = async () => {
-    const newAmount = parseFloat(amount);
-    if (isNaN(newAmount) || newAmount < 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    if (!dueDate) {
-      toast.error("Please select a due date");
-      return;
-    }
-
-    setLoading(true);
+  const onSubmit = async (values: BillInstanceFormValues) => {
     try {
-      console.log("Saving changes for instance:", billInstance._id);
       const result = await updateBillInstance({
         id: billInstance._id,
-        amount: newAmount,
-        dueDate: dueDate,
-        description: description.trim(),
-        isPaid: isPaid,
+        amount: values.amount,
+        dueDate: formatDateForSaving(values.dueDate),
+        description: values.description,
+        isPaid: values.isPaid,
       });
 
       if (result.success) {
-        onOpenChange(false);
         toast.success("Bill instance updated successfully");
+        onOpenChange(false);
       } else {
         toast.error(result.error || "Failed to update bill instance");
       }
     } catch (error) {
       console.error("Error updating instance:", error);
       toast.error("Failed to update bill instance");
-    } finally {
-      setLoading(false);
     }
   };
 
-  const hasChanges =
-    amount !== billInstance.amount.toString() ||
-    dueDate !== billInstance.dueDate ||
-    description !== (billInstance.description || "") ||
-    isPaid !== billInstance.isPaid;
-
+  const watchedIsPaid = form.watch("isPaid");
+  const watchedDueDate = form.watch("dueDate");
+  
   const isOverdue =
-    !isPaid && new Date(dueDate) < new Date();
+    !watchedIsPaid && watchedDueDate && watchedDueDate < new Date();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -124,7 +119,7 @@ export function QuickEditInstanceDialog({
             <Link
               className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-purple-700"
               href={`/bills/${billInstance.billId}`}
-              onClick={() => !open}
+              onClick={() => onOpenChange(false)}
             >
               {billInstance.billName}
             </Link>
@@ -135,7 +130,7 @@ export function QuickEditInstanceDialog({
                   badgeVariants({ variant: "outline" }),
                   "text-xs flex items-center gap-1 bg-muted",
                 )}
-                onClick={() => !open}
+                onClick={() => onOpenChange(false)}
               >
                 <div
                   className="w-2 h-2 rounded-full"
@@ -150,140 +145,176 @@ export function QuickEditInstanceDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
-            <div className="flex items-center space-x-3">
-              <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="font-medium">Due Date</p>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
+              <div className="flex items-center space-x-3">
+                <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="font-medium">Due Date</p>
+                  <p className="text-sm text-muted-foreground">
+                    {watchedDueDate ? format(watchedDueDate, "PPP") : "No date selected"}
+                  </p>
+                </div>
+              </div>
+              <Badge
+                variant={
+                  watchedIsPaid
+                    ? "default"
+                    : isOverdue
+                      ? "destructive"
+                      : "secondary"
+                }
+                className={
+                  watchedIsPaid
+                    ? "bg-green-100 text-green-800 border-green-200"
+                    : isOverdue
+                      ? "bg-red-100 text-red-200 border-red-200"
+                      : "bg-yellow-100 text-yellow-800 border-yellow-200"
+                }
+              >
+                {watchedIsPaid ? "Paid" : isOverdue ? "Overdue" : "Pending"}
+              </Badge>
+            </div>
+
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount (€)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Euro className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number.parseFloat(e.target.value) || 0)
+                          }
+                          className="pr-9 bg-background"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="dueDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Due Date</FormLabel>
+                    <FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter bill description..."
+                        className="min-h-[80px] resize-none bg-background"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isPaid"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-xs bg-background">
+                    <div className="space-y-0.5">
+                      <FormLabel>Mark as Paid</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {billInstance.description && (
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-sm font-medium mb-1">Original Description</p>
                 <p className="text-sm text-muted-foreground">
-                  {dueDate ? format(new Date(dueDate), "PPP") : "No date selected"}
+                  {billInstance.description}
                 </p>
               </div>
-            </div>
-            <Badge
-              variant={
-                isPaid
-                  ? "default"
-                  : isOverdue
-                    ? "destructive"
-                    : "secondary"
-              }
-              className={
-                isPaid
-                  ? "bg-green-100 text-green-800 border-green-200"
-                  : isOverdue
-                    ? "bg-red-100 text-red-200 border-red-200"
-                    : "bg-yellow-100 text-yellow-800 border-yellow-200"
-              }
-            >
-              {isPaid ? "Paid" : isOverdue ? "Overdue" : "Pending"}
-            </Badge>
-          </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount (€)</Label>
-              <div className="relative">
-                <Euro className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="pr-9"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Due Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dueDate && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dueDate ? (
-                      format(new Date(dueDate), "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dueDate ? new Date(dueDate) : undefined}
-                    onSelect={(date) =>
-                      date && setDueDate(format(date, "yyyy-MM-dd"))
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter bill description..."
-                className="min-h-[80px] resize-none"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="paid-status">Mark as Paid</Label>
-              <Switch
-                id="paid-status"
-                checked={isPaid}
-                onCheckedChange={setIsPaid}
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          {billInstance.description && (
-            <div className="p-3 rounded-lg bg-muted">
-              <p className="text-sm font-medium mb-1">Current Description</p>
-              <p className="text-sm text-muted-foreground">
-                {billInstance.description}
-              </p>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
-            Close
-          </Button>
-          <Button
-            onClick={saveChanges}
-            disabled={loading || !hasChanges}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            {loading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-            ) : (
-              <>
-                <Check className="h-4 w-4 mr-2" />
-                Save Changes
-              </>
             )}
-          </Button>
-        </DialogFooter>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={form.formState.isSubmitting}
+              >
+                Close
+              </Button>
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting || !form.formState.isDirty}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {form.formState.isSubmitting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

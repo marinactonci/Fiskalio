@@ -5,4 +5,5 @@ export const billInstanceSchema = z.object({
   amount: z.number().min(0.01, "Amount must be greater than 0"),
   dueDate: z.date({ required_error: "Due date is required" }),
   description: z.string().optional(),
+  isPaid: z.boolean().optional(),
 });

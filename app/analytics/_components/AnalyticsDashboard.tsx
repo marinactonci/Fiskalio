@@ -70,9 +70,8 @@ function StatCard({ title, value, icon, description, trend }: StatCardProps) {
           </div>
           {trend && (
             <div
-              className={`flex items-center space-x-1 ${
-                trend.isPositive ? "text-green-600" : "text-red-600"
-              }`}
+              className={`flex items-center space-x-1 ${trend.isPositive ? "text-green-600" : "text-red-600"
+                }`}
             >
               <TrendingUp className="h-4 w-4" />
               <span className="text-sm font-medium">{trend.value}%</span>
@@ -85,7 +84,7 @@ function StatCard({ title, value, icon, description, trend }: StatCardProps) {
 }
 
 interface MonthlyCostChartProps {
-  data: Array<{ month: string; total: number; [key: string]: number | string }>;
+  data: Array<{ month: string; total: number;[key: string]: number | string }>;
   profiles: string[];
   selectedProfile?: string;
   onProfileSelect?: (profile: string) => void;
@@ -99,9 +98,10 @@ function MonthlyCostChart({
 }: MonthlyCostChartProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value) + "€";
   };
 
   const formatMonth = (month: string) => {
@@ -294,9 +294,10 @@ export default function AnalyticsDashboard() {
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value) + "€";
   };
 
   if (!analyticsData || !monthlyCostData || !billStatusData || !profilesData) {
@@ -343,10 +344,10 @@ export default function AnalyticsDashboard() {
     selectedProfile === "all"
       ? reversedMonthlyData.monthlyData
       : reversedMonthlyData.monthlyData.map((item) => ({
-          month: item.month,
-          [selectedProfile]: item[selectedProfile] || 0,
-          total: (item[selectedProfile] as number) || 0,
-        }));
+        month: item.month,
+        [selectedProfile]: item[selectedProfile] || 0,
+        total: (item[selectedProfile] as number) || 0,
+      }));
 
   return (
     <div className="space-y-8">

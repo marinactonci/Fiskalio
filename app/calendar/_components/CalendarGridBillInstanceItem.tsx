@@ -50,7 +50,7 @@ function CalendarGridBillInstanceItem({
               : "#eab308",
           borderWidth: "2px",
         }}
-        title={`${instance.description} - $${instance.amount.toFixed(0)} ${instance.isPaid ? "(Paid)" : isOverdue ? "(Overdue)" : "(Pending)"}`}
+        title={`${instance.description} - ${instance.amount} € ${instance.isPaid ? "(Paid)" : isOverdue ? "(Overdue)" : "(Pending)"}`}
       >
         {instance.isPaid && (
           <span className="text-white text-[8px] font-bold">✓</span>
@@ -78,7 +78,7 @@ function CalendarGridBillInstanceItem({
         <div className="flex items-center justify-between min-w-0">
           <div className="flex items-center gap-2 min-w-0 max-w-full truncate">
             <span className="text-xs truncate">{instance.billName}</span>
-            <span>${instance.amount.toFixed(0)}</span>
+            <span>{instance.amount} €</span>
           </div>
           <div className="flex items-center gap-1">
             {instance.isPaid && <span>✓</span>}

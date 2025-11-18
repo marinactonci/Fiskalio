@@ -43,7 +43,7 @@ export function BillDashboard({ instances }: BillDashboardProps) {
       icon: CheckCircle,
       color: "text-green-600",
       bgColor: "bg-green-50",
-      subtitle: `€${paidAmount.toFixed(2)}`,
+      subtitle: `${paidAmount.toFixed(2)}€`,
     },
     {
       title: "Pending",
@@ -51,7 +51,7 @@ export function BillDashboard({ instances }: BillDashboardProps) {
       icon: Clock,
       color: "text-amber-600",
       bgColor: "bg-amber-50",
-      subtitle: `€${unpaidAmount.toFixed(2)}`,
+      subtitle: `${unpaidAmount.toFixed(2)}€`,
     },
     {
       title: "Overdue",
@@ -111,16 +111,16 @@ export function BillDashboard({ instances }: BillDashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Amount</p>
-              <p className="text-2xl font-bold">€{totalAmount.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{totalAmount.toFixed(2)}€</p>
             </div>
             <div className="flex space-x-4">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Paid</p>
-                <p className="font-semibold text-green-600">€{paidAmount.toFixed(2)}</p>
+                <p className="font-semibold text-green-600">{paidAmount.toFixed(2)}€</p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Outstanding</p>
-                <p className="font-semibold text-red-600">€{unpaidAmount.toFixed(2)}</p>
+                <p className="font-semibold text-red-600">{unpaidAmount.toFixed(2)}€</p>
               </div>
             </div>
           </div>
@@ -136,7 +136,7 @@ export function BillDashboard({ instances }: BillDashboardProps) {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold">€{currentMonthInstance.amount.toFixed(2)}</p>
+                <p className="font-semibold">{currentMonthInstance.amount.toFixed(2)}€</p>
                 <p className="text-sm text-muted-foreground">
                   Due: {format(currentMonthInstance.dueDate, "MMM dd, yyyy")}
                 </p>
@@ -147,15 +147,15 @@ export function BillDashboard({ instances }: BillDashboardProps) {
                   currentMonthInstance.isPaid
                     ? "border-green-200 bg-green-50 text-green-700"
                     : new Date(currentMonthInstance.dueDate) < currentDate
-                    ? "border-red-200 bg-red-50 text-red-700"
-                    : "border-amber-200 bg-amber-50 text-amber-700"
+                      ? "border-red-200 bg-red-50 text-red-700"
+                      : "border-amber-200 bg-amber-50 text-amber-700"
                 }
               >
                 {currentMonthInstance.isPaid
                   ? "Paid"
                   : new Date(currentMonthInstance.dueDate) < currentDate
-                  ? "Overdue"
-                  : "Pending"}
+                    ? "Overdue"
+                    : "Pending"}
               </Badge>
             </div>
           </CardContent>

@@ -35,10 +35,11 @@ function ProfileAnalytics({ profiles }: ProfileAnalyticsProps) {
   );
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
+    return new Intl.NumberFormat("en-US", {
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value) + "€";
   };
 
   const formatMonth = (month: string) => {
@@ -277,4 +278,4 @@ function ProfileAnalytics({ profiles }: ProfileAnalyticsProps) {
       </CardContent>
     </Card>
   );
-}export default ProfileAnalytics;
+} export default ProfileAnalytics;

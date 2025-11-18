@@ -167,14 +167,14 @@ export function QuickEditInstanceDialog({
             <div className="space-y-2">
               <Label htmlFor="amount">Amount (€)</Label>
               <div className="relative">
-                <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Euro className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="amount"
                   type="number"
                   step="0.01"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="pl-9"
+                  className="pr-9"
                 />
               </div>
             </div>

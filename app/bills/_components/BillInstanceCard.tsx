@@ -107,7 +107,7 @@ export function BillInstanceCard({ billInstance }: BillInstanceCardProps) {
         <div className="flex items-start justify-between">
           <CardTitle className="flex items-center space-x-2 text-lg">
             <NotebookTabs className="h-5 w-5 text-muted-foreground" />
-            <span>€{billInstance.amount.toFixed(2)}</span>
+            <span>{billInstance.amount.toFixed(2)}€</span>
           </CardTitle>
           <Badge className={getBadgeStyles()} variant={"outline"}>
             <div className="flex items-center space-x-1">

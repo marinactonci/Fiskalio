@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 
 interface MonthlyComparisonProps {
-  data: Array<{ month: string; total: number; [key: string]: number | string }>;
+  data: Array<{ month: string; total: number;[key: string]: number | string }>;
   profiles: string[];
 }
 
@@ -28,9 +28,10 @@ function MonthlyComparison({ data, profiles }: MonthlyComparisonProps) {
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value) + "€";
   };
 
   const formatMonth = (month: string) => {

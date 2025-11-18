@@ -183,7 +183,7 @@ export function ProfileDashboard({ profileId, bills }: ProfileDashboardProps) {
                     This Month
                   </span>
                   <span className="font-semibold">
-                    €{currentMonthTotal.toFixed(2)}
+                    {currentMonthTotal.toFixed(2)}€
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -191,7 +191,7 @@ export function ProfileDashboard({ profileId, bills }: ProfileDashboardProps) {
                     Last Month
                   </span>
                   <span className="font-semibold">
-                    €{lastMonthTotal.toFixed(2)}
+                    {lastMonthTotal.toFixed(2)}€
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -275,7 +275,7 @@ export function ProfileDashboard({ profileId, bills }: ProfileDashboardProps) {
                     </div>
                   </div>
                   <span className="font-semibold">
-                    €{item.avgAmount.toFixed(2)}
+                    {item.avgAmount.toFixed(2)}€
                   </span>
                 </div>
               ))}
@@ -313,8 +313,8 @@ export function ProfileDashboard({ profileId, bills }: ProfileDashboardProps) {
                       <div>
                         <span className="font-medium">{instance.billName}</span>
                         <p className="text-sm text-muted-foreground">
-                          Due {format(instance.dueDate, "MMM dd")} • €
-                          {instance.amount.toFixed(2)}
+                          Due {format(instance.dueDate, "MMM dd")} •{" "}
+                          {instance.amount.toFixed(2)}€
                         </p>
                       </div>
                       <Badge

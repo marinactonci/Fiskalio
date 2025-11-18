@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import Link from "next/link";
 import { decryptString } from "@/lib/utils";
+import { ArrowRight } from "lucide-react";
 
 interface BillCardProps {
   bill: Bill;
@@ -28,12 +29,12 @@ function BillCard({ bill }: BillCardProps) {
           </div>
         </CardHeader>
         <CardContent>
-          {bill.eBill?.link && (
+          {bill.eBill?.link && bill.eBill.link.length > 0 && (
             <p className="text-sm text-muted-foreground dark:text-slate-400 mb-2 truncate">
               🌐 {bill.eBill.link}
             </p>
           )}
-          {bill.eBill?.username && (
+          {bill.eBill?.username && bill.eBill.username.length > 0 && (
             <p className="text-sm text-muted-foreground dark:text-slate-400 mb-2">
               👤 {decryptString(bill.eBill.username)}
             </p>
@@ -43,7 +44,10 @@ function BillCard({ bill }: BillCardProps) {
               Created {format(bill._creationTime, "PPP")}
             </div>
             <div className="text-xs text-primary font-medium group-hover:text-primary/80 transition-colors">
-              View Details →
+              <div className="flex items-center">
+                <span>View Details</span>
+                <ArrowRight className="inline-block ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform" />
+              </div>
             </div>
           </div>
         </CardContent>

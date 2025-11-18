@@ -1,10 +1,10 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from 'convex/react';
-import { Edit } from 'lucide-react';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "convex/react";
+import { Edit } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -21,11 +21,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
-import { billSchema } from '@/schemas/bill';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { api } from "@/convex/_generated/api";
+import { billSchema } from "@/schemas/bill";
+import { type Bill } from "@/convex/schema";
+import { decryptString, encryptString } from "@/lib/utils";
 
 type BillFormValues = {
   name: string;
@@ -35,15 +36,7 @@ type BillFormValues = {
 };
 
 interface EditBillDialogProps {
-  bill: {
-    _id: Id<'bills'>;
-    name: string;
-    eBill?: {
-      link: string;
-      username: string;
-      password: string;
-    };
-  };
+  bill: Bill;
   onBillUpdated?: () => void;
 }
 
@@ -55,9 +48,9 @@ export function EditBillDialog({ bill, onBillUpdated }: EditBillDialogProps) {
     resolver: zodResolver(billSchema),
     defaultValues: {
       name: bill.name,
-      website: bill.eBill?.link || '',
-      username: bill.eBill?.username || '',
-      password: bill.eBill?.password || '',
+      website: bill.eBill?.link || "",
+      username: bill.eBill?.username ? decryptString(bill.eBill.username) : "",
+      password: bill.eBill?.password ? decryptString(bill.eBill.password) : "",
     },
   });
 
@@ -66,9 +59,9 @@ export function EditBillDialog({ bill, onBillUpdated }: EditBillDialogProps) {
       const eBillData =
         values.website || values.username || values.password
           ? {
-              link: values.website || '',
-              username: values.username || '',
-              password: values.password || '',
+              link: values.website || "",
+              username: values.username ? encryptString(values.username) : "",
+              password: values.password ? encryptString(values.password) : "",
             }
           : undefined;
 
@@ -79,14 +72,14 @@ export function EditBillDialog({ bill, onBillUpdated }: EditBillDialogProps) {
       });
 
       if (result.success) {
-        toast.success('Bill updated successfully!');
+        toast.success("Bill updated successfully!");
         setOpen(false);
         onBillUpdated?.();
       } else {
-        toast.error(result.error || 'Failed to update bill.');
+        toast.error(result.error || "Failed to update bill.");
       }
     } catch {
-      toast.error('Failed to update bill. Please try again.');
+      toast.error("Failed to update bill. Please try again.");
     }
   };
 
@@ -192,7 +185,7 @@ export function EditBillDialog({ bill, onBillUpdated }: EditBillDialogProps) {
                 disabled={form.formState.isSubmitting}
                 type="submit"
               >
-                {form.formState.isSubmitting ? 'Updating...' : 'Update Bill'}
+                {form.formState.isSubmitting ? "Updating..." : "Update Bill"}
               </Button>
             </DialogFooter>
           </form>

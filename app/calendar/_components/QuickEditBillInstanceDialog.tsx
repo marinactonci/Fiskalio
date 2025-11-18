@@ -14,13 +14,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Check, Calendar, Euro } from "lucide-react";
+import { Check, Calendar as CalendarIcon, Euro } from "lucide-react";
 import type { BillInstance } from "@/convex/schema";
 import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface QuickEditInstanceDialogProps {
   open: boolean;
@@ -39,6 +45,7 @@ export function QuickEditInstanceDialog({
   billInstance,
 }: QuickEditInstanceDialogProps) {
   const [amount, setAmount] = useState(billInstance.amount.toString());
+  const [dueDate, setDueDate] = useState(billInstance.dueDate);
   const [description, setDescription] = useState(
     billInstance.description || "",
   );
@@ -50,12 +57,14 @@ export function QuickEditInstanceDialog({
   useEffect(() => {
     if (open) {
       setAmount(billInstance.amount.toString());
+      setDueDate(billInstance.dueDate);
       setDescription(billInstance.description || "");
       setIsPaid(billInstance.isPaid);
     }
   }, [
     billInstance._id,
     billInstance.amount,
+    billInstance.dueDate,
     billInstance.description,
     billInstance.isPaid,
     open,
@@ -63,8 +72,13 @@ export function QuickEditInstanceDialog({
 
   const saveChanges = async () => {
     const newAmount = parseFloat(amount);
-    if (isNaN(newAmount) || newAmount <= 0) {
+    if (isNaN(newAmount) || newAmount < 0) {
       toast.error("Please enter a valid amount");
+      return;
+    }
+
+    if (!dueDate) {
+      toast.error("Please select a due date");
       return;
     }
 
@@ -74,6 +88,7 @@ export function QuickEditInstanceDialog({
       const result = await updateBillInstance({
         id: billInstance._id,
         amount: newAmount,
+        dueDate: dueDate,
         description: description.trim(),
         isPaid: isPaid,
       });
@@ -94,11 +109,12 @@ export function QuickEditInstanceDialog({
 
   const hasChanges =
     amount !== billInstance.amount.toString() ||
+    dueDate !== billInstance.dueDate ||
     description !== (billInstance.description || "") ||
     isPaid !== billInstance.isPaid;
 
   const isOverdue =
-    !billInstance.isPaid && new Date(billInstance.dueDate) < new Date();
+    !isPaid && new Date(dueDate) < new Date();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -135,31 +151,31 @@ export function QuickEditInstanceDialog({
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
             <div className="flex items-center space-x-3">
-              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <CalendarIcon className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="font-medium">Due Date</p>
                 <p className="text-sm text-muted-foreground">
-                  {format(new Date(billInstance.dueDate), "PPP")}
+                  {dueDate ? format(new Date(dueDate), "PPP") : "No date selected"}
                 </p>
               </div>
             </div>
             <Badge
               variant={
-                billInstance.isPaid
+                isPaid
                   ? "default"
                   : isOverdue
                     ? "destructive"
                     : "secondary"
               }
               className={
-                billInstance.isPaid
+                isPaid
                   ? "bg-green-100 text-green-800 border-green-200"
                   : isOverdue
                     ? "bg-red-100 text-red-200 border-red-200"
                     : "bg-yellow-100 text-yellow-800 border-yellow-200"
               }
             >
-              {billInstance.isPaid ? "Paid" : isOverdue ? "Overdue" : "Pending"}
+              {isPaid ? "Paid" : isOverdue ? "Overdue" : "Pending"}
             </Badge>
           </div>
 
@@ -177,6 +193,38 @@ export function QuickEditInstanceDialog({
                   className="pr-9"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Due Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dueDate && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dueDate ? (
+                      format(new Date(dueDate), "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={dueDate ? new Date(dueDate) : undefined}
+                    onSelect={(date) =>
+                      date && setDueDate(format(date, "yyyy-MM-dd"))
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">

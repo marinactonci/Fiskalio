@@ -141,8 +141,8 @@ export default function Bill() {
 
                   // Then by due date
                   return (
-                    new Date(a.dueDate).getTime() -
-                    new Date(b.dueDate).getTime()
+                    new Date(b.dueDate).getTime() -
+                    new Date(a.dueDate).getTime()
                   );
                 })
                 .map((instance) => (

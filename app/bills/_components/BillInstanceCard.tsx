@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import type { BillInstance } from "@/convex/schema";
-import { EditBillInstanceDialog } from "./EditBillInstanceDialog";
+import { EditBillInstanceDialog } from "@/components/EditBillInstanceDialog";
 import DeleteBillInstanceAlertDialog from "./DeleteBillInstanceAlertDialog";
 
 interface BillInstanceCardProps {

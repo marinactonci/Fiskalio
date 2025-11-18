@@ -12,7 +12,7 @@ import {
 } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { BillInstance } from "@/convex/schema";
-import { QuickEditInstanceDialog } from "./QuickEditBillInstanceDialog";
+import { EditBillInstanceDialog } from "@/components/EditBillInstanceDialog";
 import CalendarGridBillInstanceItem from "./CalendarGridBillInstanceItem";
 
 interface CalendarGridProps {
@@ -117,7 +117,8 @@ export function CalendarGrid({
       </Card>
 
       {selectedInstance && (
-        <QuickEditInstanceDialog
+        <EditBillInstanceDialog
+          variant="quick"
           open={showQuickEdit}
           onOpenChange={setShowQuickEdit}
           billInstance={selectedInstance}

@@ -37,11 +37,6 @@ function Navbar() {
       label: "Calendar",
       isActive: pathname === "/calendar",
     },
-    {
-      href: "/analytics",
-      label: "Analytics",
-      isActive: pathname === "/analytics",
-    },
   ];
 
   return (

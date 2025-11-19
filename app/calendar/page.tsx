@@ -71,6 +71,16 @@ export default function Calendar() {
     return true;
   });
 
+  const currentMonthTotal = filteredInstances
+    .filter((instance) => {
+      const instanceDate = new Date(instance.dueDate);
+      return (
+        instanceDate.getMonth() === currentDate.getMonth() &&
+        instanceDate.getFullYear() === currentDate.getFullYear()
+      );
+    })
+    .reduce((sum, instance) => sum + instance.amount, 0);
+
   const monthName = currentDate.toLocaleDateString("en-US", {
     month: "long",
     year: "numeric",
@@ -205,6 +215,12 @@ export default function Calendar() {
           )}
 
           <div className="flex items-center space-x-2">
+            <Badge
+              variant="secondary"
+              className="bg-blue-100 text-blue-800 border-blue-200"
+            >
+              Total: €{currentMonthTotal.toFixed(2)}
+            </Badge>
             <Badge
               variant="secondary"
               className="bg-green-100 text-green-800 border-green-200"

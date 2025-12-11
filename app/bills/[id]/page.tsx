@@ -130,20 +130,28 @@ export default function Bill() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {instances
                 .sort((a, b) => {
-                  // Sort by status: overdue first, then pending, then paid
-                  const aOverdue = new Date(a.dueDate) < new Date();
-                  const bOverdue = new Date(b.dueDate) < new Date();
-
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  
+                  const aDueDate = new Date(a.dueDate);
+                  aDueDate.setHours(0, 0, 0, 0);
+                  
+                  const bDueDate = new Date(b.dueDate);
+                  bDueDate.setHours(0, 0, 0, 0);
+                  
+                  const aOverdue = aDueDate < today && !a.isPaid;
+                  const bOverdue = bDueDate < today && !b.isPaid;
+                
+                  // 1. Overdue unpaid bills first
                   if (aOverdue && !bOverdue) return -1;
                   if (!aOverdue && bOverdue) return 1;
+                
+                  // 2. Then unpaid bills
                   if (!a.isPaid && b.isPaid) return -1;
                   if (a.isPaid && !b.isPaid) return 1;
-
-                  // Then by due date
-                  return (
-                    new Date(b.dueDate).getTime() -
-                    new Date(a.dueDate).getTime()
-                  );
+                
+                  // 3. Sort by due date (descending)
+                  return bDueDate.getTime() - aDueDate.getTime();
                 })
                 .map((instance) => (
                   <BillInstanceCard

@@ -142,7 +142,10 @@ export default function Bill() {
                   const aOverdue = aDueDate < today && !a.isPaid;
                   const bOverdue = bDueDate < today && !b.isPaid;
                 
-                  // 1. Overdue unpaid bills first
+                  // 1. Overdue unpaid bills first (oldest first)
+                  if (aOverdue && bOverdue) {
+                    return aDueDate.getTime() - bDueDate.getTime(); // ascending for overdue
+                  }
                   if (aOverdue && !bOverdue) return -1;
                   if (!aOverdue && bOverdue) return 1;
                 

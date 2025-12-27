@@ -42,6 +42,7 @@ import { api } from "@/convex/_generated/api";
 import type { BillInstance } from "@/convex/schema";
 import { cn, formatDateForSaving } from "@/lib/utils";
 import { billInstanceSchema } from "@/schemas/billInstance";
+import DeleteBillInstanceAlertDialog from "@/app/bills/_components/DeleteBillInstanceAlertDialog";
 
 type BillInstanceFormValues = z.infer<typeof billInstanceSchema>;
 
@@ -94,6 +95,10 @@ export function EditBillInstanceDialog({
       });
     }
   }, [billInstance, open, form]);
+
+  const handleOnDelete = () => {
+    setOpen(false);
+  };
 
   const onSubmit = async (values: BillInstanceFormValues) => {
     try {
@@ -381,6 +386,13 @@ export function EditBillInstanceDialog({
             )}
 
             <DialogFooter>
+              <div className="mr-auto">
+                <DeleteBillInstanceAlertDialog
+                  billInstance={billInstance}
+                  onDelete={handleOnDelete}
+                  isInDialog
+                />
+              </div>
               <Button
                 disabled={form.formState.isSubmitting}
                 onClick={() => setOpen(false)}
@@ -412,7 +424,7 @@ export function EditBillInstanceDialog({
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
                   ) : (
                     <>
-                      <Check className="h-4 w-4 mr-2" />
+                      <Check className="h-4 w-4" />
                       Save Changes
                     </>
                   )}

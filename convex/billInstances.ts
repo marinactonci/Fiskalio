@@ -354,7 +354,7 @@ export const generateMonthlyBillInstances = internalMutation({
       now.getMonth() - 1,
       1,
     );
-    const billMonth = `${previousMonthDate.getFullYear()}-${String(previousMonthDate.getMonth() + 1).padStart(2, "0")}`;
+    const billMonth = format(previousMonthDate, "MMMM yyyy");
 
     // Due date is in the CURRENT month
     const currentMonth = now.getMonth() + 1;
@@ -375,22 +375,35 @@ export const generateMonthlyBillInstances = internalMutation({
     // For each user, create bill instances for the previous month
     for (const [userId, userBills] of billsByUser) {
       for (const bill of userBills) {
-        // Check if instance already exists for the previous month
-        const existingInstance = await ctx.db
+        // Get all instances for this bill to check for duplicates and get previous amount
+        const instances = await ctx.db
           .query("billInstances")
           .withIndex("by_bill", (q) => q.eq("billId", bill._id))
-          .filter((q) => q.eq(q.field("month"), billMonth))
-          .filter((q) => q.eq(q.field("userId"), userId))
-          .first();
+          .collect();
+
+        // Check if instance already exists for the target month
+        const existingInstance = instances.find((i) => i.month === billMonth);
 
         if (!existingInstance) {
+          // Find the most recent previous instance to get the amount
+          const previousInstances = instances
+            .map((i) => {
+              const date = new Date(i.month);
+              return { ...i, parsedDate: isNaN(date.getTime()) ? null : date };
+            })
+            .filter((i) => i.parsedDate && i.parsedDate < previousMonthDate)
+            .sort((a, b) => b.parsedDate!.getTime() - a.parsedDate!.getTime());
+
+          const amountToUse =
+            previousInstances.length > 0 ? previousInstances[0].amount : 0;
+
           // Create new bill instance
           await ctx.db.insert("billInstances", {
             billId: bill._id,
             month: billMonth,
-            amount: bill.amount || 0,
-            dueDate: `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(bill.dueDay || 1).padStart(2, "0")}`,
-            description: `${bill.name}'s monthly instance for ${format(previousMonthDate, "MMMM yyyy")}`,
+            amount: amountToUse,
+            dueDate: `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String((bill as any).dueDay || 1).padStart(2, "0")}`,
+            description: `${bill.name}'s monthly instance for ${billMonth}`,
             isPaid: false,
             userId: userId,
           });

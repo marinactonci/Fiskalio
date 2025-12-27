@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CreateBillInstanceFromCalendarDialog } from "./_components/CreateBillInstanceFromCalendarDialog";
 import { CalendarGrid } from "./_components/CalendarGrid";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -181,6 +182,7 @@ export default function Calendar() {
 
         {/* Filters and Stats */}
         <div className="flex flex-col items-center space-y-3 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-4">
+          <CreateBillInstanceFromCalendarDialog />
           <div className="flex items-center space-x-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select

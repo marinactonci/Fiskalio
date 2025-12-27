@@ -21,10 +21,14 @@ import { useRouter } from "next/navigation";
 
 interface DeleteBillInstanceAlertDialogProps {
   billInstance: BillInstance;
+  isInDialog?: boolean;
+  onDelete?: () => void;
 }
 
 function DeleteBillInstanceAlertDialog({
   billInstance,
+  isInDialog = false,
+  onDelete,
 }: DeleteBillInstanceAlertDialogProps) {
   const [loading, setLoading] = useState(false);
 
@@ -35,11 +39,14 @@ function DeleteBillInstanceAlertDialog({
   const handleDeleteBillInstance = async () => {
     setLoading(true);
     try {
-      const result = await deleteBillInstance({ id: billInstance._id as Id<"billInstances"> });
+      const result = await deleteBillInstance({
+        id: billInstance._id as Id<"billInstances">,
+      });
 
       if (result.success) {
         toast.success("Bill instance deleted successfully!");
-        router.push(`/bills/${billInstance.billId}`);
+        if (isInDialog) onDelete?.();
+        else router.push(`/bills/${billInstance.billId}`);
       } else {
         toast.error(result.error || "Failed to delete bill instance.");
       }

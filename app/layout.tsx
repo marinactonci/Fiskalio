@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,7 +43,8 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <Navbar />
-              <main className="container mx-auto px-4 py-12">{children}</main>
+              <main>{children}</main>
+              <Footer />
             </ThemeProvider>
             <Toaster />
           </ConvexClientProvider>

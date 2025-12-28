@@ -19,6 +19,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { PageContainer } from "@/components/PageContainer";
 
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -36,7 +37,9 @@ export default function Calendar() {
     profileId ? { profileId } : "skip",
   );
 
-  const instancesResult = profileId ? profileInstancesResult : allInstancesResult;
+  const instancesResult = profileId
+    ? profileInstancesResult
+    : allInstancesResult;
   const instances = instancesResult?.success ? instancesResult.data || [] : [];
 
   // Get profile info if filtering by profile
@@ -52,7 +55,9 @@ export default function Calendar() {
     api.profiles.getProfilesForUser,
     !profileId ? undefined : "skip",
   );
-  const allProfiles = allProfilesResult?.success ? allProfilesResult.data || [] : [];
+  const allProfiles = allProfilesResult?.success
+    ? allProfilesResult.data || []
+    : [];
 
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) => {
@@ -90,180 +95,192 @@ export default function Calendar() {
   // Show loading state while fetching data
   if (!instancesResult || (profileId && !profileResult)) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <PageContainer>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </PageContainer>
     );
   }
 
   // Show error state if data failed to load
   if (!instancesResult.success) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <p className="text-red-500 mb-2">Error loading calendar data</p>
-          <p className="text-muted-foreground">{instancesResult.error}</p>
+      <PageContainer>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-500 mb-2">Error loading calendar data</p>
+            <p className="text-muted-foreground">{instancesResult.error}</p>
+          </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (profileId && profileResult && !profileResult.success) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <p className="text-red-500 mb-2">Error loading profile</p>
-          <p className="text-muted-foreground">{profileResult.error}</p>
+      <PageContainer>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-500 mb-2">Error loading profile</p>
+            <p className="text-muted-foreground">{profileResult.error}</p>
+          </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center space-x-4">
-        <div className="flex-1">
-          <div className="flex items-center space-x-4">
-            {profileId && (
-              <>
-                <Link
-                  href={`/profiles/${profileId}`}
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "sm" }),
-                    "hover:bg-muted/50",
-                  )}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Profile
-                </Link>
-                <div className="hidden h-6 w-px bg-border sm:block" />
-              </>
-            )}
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {profileId && profile ? `${profile.name} Calendar` : "Calendar"}
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                {profileId && profile
-                  ? `View and manage bill instances for ${profile.name}`
-                  : "View and manage your bill instances by month. Click on a date to quickly edit the details."}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile responsive navigation and filters */}
-      <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-        {/* Month Navigation */}
-        <div className="flex items-center justify-center lg:justify-start">
-          <div className="flex items-center space-x-4 lg:space-x-8">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigateMonth("prev")}
-              className="hover:bg-muted/50"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-2xl font-semibold w-auto text-center">
-              {monthName}
-            </h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigateMonth("next")}
-              className="hover:bg-muted/50"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Filters and Stats */}
-        <div className="flex flex-col items-center space-y-3 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-4">
-          <CreateBillInstanceFromCalendarDialog />
-          <div className="flex items-center space-x-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select
-              value={filter}
-              onValueChange={(value: "all" | "paid" | "unpaid") =>
-                setFilter(value)
-              }
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Bills</SelectItem>
-                <SelectItem value="paid">Paid Only</SelectItem>
-                <SelectItem value="unpaid">Unpaid Only</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {profileId && profile && (
-            <Badge
-              variant="secondary"
-              className="bg-blue-100 text-blue-800 border-blue-200"
-              style={{
-                backgroundColor: `${profile.color}20`,
-                borderColor: `${profile.color}40`,
-                color: profile.color,
-              }}
-            >
-              {profile.name} Only
-            </Badge>
-          )}
-
-          <div className="flex items-center space-x-2">
-            <Badge
-              variant="secondary"
-              className="bg-blue-100 text-blue-800 border-blue-200"
-            >
-              Total: €{currentMonthTotal.toFixed(2)}
-            </Badge>
-            <Badge
-              variant="secondary"
-              className="bg-green-100 text-green-800 border-green-200"
-            >
-              {instances.filter((i) => i.isPaid).length} Paid
-            </Badge>
-            <Badge
-              variant="secondary"
-              className="bg-red-100 text-red-800 border-red-200"
-            >
-              {instances.filter((i) => !i.isPaid).length} Unpaid
-            </Badge>
-          </div>
-
-          {/* Color Legend - only show when viewing all profiles */}
-          {!profileId && allProfiles.length > 0 && (
-            <div className="flex flex-col space-y-2 lg:items-end">
-              <div className="text-xs text-muted-foreground font-medium">Profile Colors:</div>
-              <div className="flex flex-wrap gap-2">
-                {allProfiles.map((prof) => (
-                  <div
-                    key={prof._id}
-                    className="flex items-center space-x-1 text-xs"
+    <PageContainer>
+      <div className="space-y-8">
+        <div className="flex items-center space-x-4">
+          <div className="flex-1">
+            <div className="flex items-center space-x-4">
+              {profileId && (
+                <>
+                  <Link
+                    href={`/profiles/${profileId}`}
+                    className={cn(
+                      buttonVariants({ variant: "ghost", size: "sm" }),
+                      "hover:bg-muted/50",
+                    )}
                   >
-                    <div
-                      className="w-3 h-3 rounded-full border border-gray-300"
-                      style={{ backgroundColor: prof.color }}
-                    />
-                    <span className="text-muted-foreground">{prof.name}</span>
-                  </div>
-                ))}
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Profile
+                  </Link>
+                  <div className="hidden h-6 w-px bg-border sm:block" />
+                </>
+              )}
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {profileId && profile
+                    ? `${profile.name} Calendar`
+                    : "Calendar"}
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  {profileId && profile
+                    ? `View and manage bill instances for ${profile.name}`
+                    : "View and manage your bill instances by month. Click on a date to quickly edit the details."}
+                </p>
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
 
-      <CalendarGrid
-        currentDate={currentDate}
-        billInstances={filteredInstances}
-      />
-    </div>
+        {/* Mobile responsive navigation and filters */}
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          {/* Month Navigation */}
+          <div className="flex items-center justify-center lg:justify-start">
+            <div className="flex items-center space-x-4 lg:space-x-8">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateMonth("prev")}
+                className="hover:bg-muted/50"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-2xl font-semibold w-auto text-center">
+                {monthName}
+              </h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateMonth("next")}
+                className="hover:bg-muted/50"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Filters and Stats */}
+          <div className="flex flex-col items-center space-y-3 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-4">
+            <CreateBillInstanceFromCalendarDialog />
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select
+                value={filter}
+                onValueChange={(value: "all" | "paid" | "unpaid") =>
+                  setFilter(value)
+                }
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Bills</SelectItem>
+                  <SelectItem value="paid">Paid Only</SelectItem>
+                  <SelectItem value="unpaid">Unpaid Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {profileId && profile && (
+              <Badge
+                variant="secondary"
+                className="bg-blue-100 text-blue-800 border-blue-200"
+                style={{
+                  backgroundColor: `${profile.color}20`,
+                  borderColor: `${profile.color}40`,
+                  color: profile.color,
+                }}
+              >
+                {profile.name} Only
+              </Badge>
+            )}
+
+            <div className="flex items-center space-x-2">
+              <Badge
+                variant="secondary"
+                className="bg-blue-100 text-blue-800 border-blue-200"
+              >
+                Total: €{currentMonthTotal.toFixed(2)}
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-800 border-green-200"
+              >
+                {instances.filter((i) => i.isPaid).length} Paid
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="bg-red-100 text-red-800 border-red-200"
+              >
+                {instances.filter((i) => !i.isPaid).length} Unpaid
+              </Badge>
+            </div>
+
+            {/* Color Legend - only show when viewing all profiles */}
+            {!profileId && allProfiles.length > 0 && (
+              <div className="flex flex-col space-y-2 lg:items-end">
+                <div className="text-xs text-muted-foreground font-medium">
+                  Profile Colors:
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {allProfiles.map((prof) => (
+                    <div
+                      key={prof._id}
+                      className="flex items-center space-x-1 text-xs"
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full border border-gray-300"
+                        style={{ backgroundColor: prof.color }}
+                      />
+                      <span className="text-muted-foreground">{prof.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <CalendarGrid
+          currentDate={currentDate}
+          billInstances={filteredInstances}
+        />
+      </div>
+    </PageContainer>
   );
 }

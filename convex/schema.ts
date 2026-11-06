@@ -25,6 +25,9 @@ const schema = defineSchema({
         password: v.string(),
       }),
     ),
+    // Day of the month the bill is usually due; used when the monthly cron
+    // opens new instances.
+    dueDay: v.optional(v.number()),
     billInstanceCount: v.number(),
     userId: v.string(),
   })
@@ -38,10 +41,24 @@ const schema = defineSchema({
     dueDate: v.string(),
     description: v.optional(v.string()),
     isPaid: v.boolean(),
+    // True while the amount is still the copy of last month's amount made by
+    // the monthly cron; cleared as soon as the user edits the amount.
+    isEstimated: v.optional(v.boolean()),
+    // When the instance was marked paid (ms since epoch).
+    paidAt: v.optional(v.number()),
     userId: v.string(),
   })
     .index("by_bill", ["billId"])
-    .index("by_month_user", ["month", "userId"]),
+    .index("by_month_user", ["month", "userId"])
+    .index("by_userId", ["userId"]),
+
+  // Named filter combinations shown in the sidebar ("Spremljeni pogledi").
+  savedViews: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    // Serialized filter query string, e.g. "status=unpaid&profiles=a,b".
+    query: v.string(),
+  }).index("by_userId", ["userId"]),
 });
 
 export default schema;
@@ -49,3 +66,4 @@ export default schema;
 export type Profile = Doc<"profiles">;
 export type Bill = Doc<"bills">;
 export type BillInstance = Doc<"billInstances">;
+export type SavedView = Doc<"savedViews">;

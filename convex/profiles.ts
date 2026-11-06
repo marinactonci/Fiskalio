@@ -66,6 +66,45 @@ export const getProfilesForUser = query({
   },
 });
 
+/**
+ * Deletes every profile, bill, bill instance and saved view of the signed-in
+ * user. Called right before the Clerk account itself is deleted.
+ */
+export const deleteAllMyData = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { success: false, error: "User not authenticated" };
+    }
+    const userId = identity.tokenIdentifier;
+
+    const [instances, bills, profiles, views] = await Promise.all([
+      ctx.db
+        .query("billInstances")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("bills")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("profiles")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("savedViews")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+    ]);
+
+    for (const doc of [...instances, ...bills, ...profiles, ...views]) {
+      await ctx.db.delete(doc._id);
+    }
+    return { success: true };
+  },
+});
+
 export const getProfile = query({
   args: {
     id: v.id("profiles"),
@@ -131,7 +170,6 @@ export const updateProfile = mutation({
     }
 
     const updatedProfile = await ctx.db.patch(args.id, {
-      ...profile,
       name: args.name ?? profile.name,
       address: args.address ?? profile.address,
       color: args.color ?? profile.color,
@@ -190,6 +228,22 @@ export const deleteProfile = mutation({
 
     if (profile.userId !== identity.tokenIdentifier) {
       return { success: false, error: "Unauthorized to delete this profile" };
+    }
+
+    // Cascade: a profile owns its bills, and bills own their instances.
+    const bills = await ctx.db
+      .query("bills")
+      .withIndex("by_profile", (q) => q.eq("profileId", args.id))
+      .collect();
+    for (const bill of bills) {
+      const instances = await ctx.db
+        .query("billInstances")
+        .withIndex("by_bill", (q) => q.eq("billId", bill._id))
+        .collect();
+      for (const instance of instances) {
+        await ctx.db.delete(instance._id);
+      }
+      await ctx.db.delete(bill._id);
     }
 
     await ctx.db.delete(args.id);

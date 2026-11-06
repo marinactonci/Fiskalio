@@ -12,6 +12,7 @@ export const createBillForProfile = mutation({
         password: v.string(),
       }),
     ),
+    dueDay: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -20,10 +21,16 @@ export const createBillForProfile = mutation({
       return { success: false, error: "User not authenticated" };
     }
 
+    const profile = await ctx.db.get(args.profileId);
+    if (!profile || profile.userId !== identity.tokenIdentifier) {
+      return { success: false, error: "Profile not found" };
+    }
+
     const bill = {
       profileId: args.profileId,
       name: args.name,
       eBill: args.eBill,
+      dueDay: args.dueDay,
       userId: identity.tokenIdentifier,
       billInstanceCount: 0, // Will be computed dynamically in queries
     };
@@ -131,7 +138,7 @@ export const deleteBill = mutation({
       .collect();
 
     for (const instance of billInstances) {
-      ctx.db.delete(instance._id);
+      await ctx.db.delete(instance._id);
     }
 
     await ctx.db.delete(args.id);
@@ -151,6 +158,10 @@ export const updateBill = mutation({
         password: v.string(),
       }),
     ),
+    // When true (and no eBill is given), the e-bill details are removed.
+    removeEBill: v.optional(v.boolean()),
+    dueDay: v.optional(v.number()),
+    profileId: v.optional(v.id("profiles")),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -171,13 +182,27 @@ export const updateBill = mutation({
 
     const updates: {
       name?: string;
-      eBill?: { link: string; username: string; password: string };
+      eBill?: { link: string; username: string; password: string } | undefined;
+      dueDay?: number;
+      profileId?: typeof bill.profileId;
     } = {};
     if (args.name !== undefined) {
       updates.name = args.name;
     }
     if (args.eBill !== undefined) {
       updates.eBill = args.eBill;
+    } else if (args.removeEBill) {
+      updates.eBill = undefined;
+    }
+    if (args.dueDay !== undefined) {
+      updates.dueDay = args.dueDay;
+    }
+    if (args.profileId !== undefined && args.profileId !== bill.profileId) {
+      const profile = await ctx.db.get(args.profileId);
+      if (!profile || profile.userId !== identity.tokenIdentifier) {
+        return { success: false, error: "Profile not found" };
+      }
+      updates.profileId = args.profileId;
     }
 
     await ctx.db.patch(args.id, updates);

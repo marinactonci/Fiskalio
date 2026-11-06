@@ -24,6 +24,7 @@ export const createBillInstance = mutation({
       dueDate: args.dueDate,
       description: args.description,
       isPaid: false,
+      isEstimated: false,
       userId: identity.tokenIdentifier,
     };
 
@@ -64,12 +65,16 @@ export const updateBillInstance = mutation({
       dueDate: string;
       description: string;
       isPaid: boolean;
+      isEstimated: boolean;
+      paidAt: number | undefined;
     }> = {};
     if (args.month !== undefined) {
       updates.month = args.month;
     }
     if (args.amount !== undefined) {
       updates.amount = args.amount;
+      // Any amount the user saves is a confirmed amount, not the cron's copy.
+      updates.isEstimated = false;
     }
     if (args.dueDate !== undefined) {
       updates.dueDate = args.dueDate;
@@ -77,8 +82,9 @@ export const updateBillInstance = mutation({
     if (args.description !== undefined) {
       updates.description = args.description;
     }
-    if (args.isPaid !== undefined) {
+    if (args.isPaid !== undefined && args.isPaid !== billInstance.isPaid) {
       updates.isPaid = args.isPaid;
+      updates.paidAt = args.isPaid ? Date.now() : undefined;
     }
 
     await ctx.db.patch(args.id, updates);
@@ -107,8 +113,108 @@ export const toggleBillInstancePaidStatus = mutation({
       return { success: false, error: "Unauthorized to update this bill instance" };
     }
 
-    await ctx.db.patch(args.id, { isPaid: !billInstance.isPaid });
+    const isPaid = !billInstance.isPaid;
+    await ctx.db.patch(args.id, {
+      isPaid,
+      paidAt: isPaid ? Date.now() : undefined,
+    });
     return { success: true, data: args.id };
+  },
+});
+
+export const setPaid = mutation({
+  args: {
+    id: v.id("billInstances"),
+    isPaid: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    const billInstance = await ctx.db.get(args.id);
+
+    if (!billInstance || billInstance.userId !== identity.tokenIdentifier) {
+      return { success: false, error: "Bill instance not found" };
+    }
+
+    if (billInstance.isPaid !== args.isPaid) {
+      await ctx.db.patch(args.id, {
+        isPaid: args.isPaid,
+        paidAt: args.isPaid ? Date.now() : undefined,
+      });
+    }
+    return { success: true, data: args.id };
+  },
+});
+
+/**
+ * Everything the app views need in one round trip: profiles, bills (without
+ * e-bill credentials) and all bill instances of the signed-in user. Filtering,
+ * grouping and statistics happen on the client so every view shares the same
+ * filter model.
+ */
+export const getOverview = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      return { success: false as const, error: "User not authenticated" };
+    }
+
+    const userId = identity.tokenIdentifier;
+
+    const [profiles, bills, instances] = await Promise.all([
+      ctx.db
+        .query("profiles")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("bills")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("billInstances")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+    ]);
+
+    return {
+      success: true as const,
+      data: {
+        profiles: profiles.map((p) => ({
+          _id: p._id,
+          _creationTime: p._creationTime,
+          name: p.name,
+          color: p.color || "#3360E0",
+          address: p.address,
+        })),
+        bills: bills.map((b) => ({
+          _id: b._id,
+          _creationTime: b._creationTime,
+          profileId: b.profileId,
+          name: b.name,
+          dueDay: b.dueDay,
+          hasEBill: !!b.eBill,
+          eBillLink: b.eBill?.link || undefined,
+        })),
+        instances: instances.map((i) => ({
+          _id: i._id,
+          _creationTime: i._creationTime,
+          billId: i.billId,
+          month: i.month,
+          amount: i.amount,
+          dueDate: i.dueDate,
+          description: i.description,
+          isPaid: i.isPaid,
+          isEstimated: i.isEstimated ?? false,
+          paidAt: i.paidAt,
+        })),
+      },
+    };
   },
 });
 
@@ -397,14 +503,19 @@ export const generateMonthlyBillInstances = internalMutation({
           const amountToUse =
             previousInstances.length > 0 ? previousInstances[0].amount : 0;
 
-          // Create new bill instance
+          // Clamp the due day to the length of the current month (e.g. 31 → 30).
+          const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+          const dueDay = Math.min(Math.max(bill.dueDay ?? 1, 1), daysInMonth);
+
+          // Create new bill instance; the amount is last month's copy until
+          // the user confirms it.
           await ctx.db.insert("billInstances", {
             billId: bill._id,
             month: billMonth,
             amount: amountToUse,
-            dueDate: `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String((bill as any).dueDay || 1).padStart(2, "0")}`,
-            description: `${bill.name}'s monthly instance for ${billMonth}`,
+            dueDate: `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(dueDay).padStart(2, "0")}`,
             isPaid: false,
+            isEstimated: true,
             userId: userId,
           });
         }

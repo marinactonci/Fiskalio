@@ -130,6 +130,8 @@ function MonthCal({
         </div>
         <div className="flex items-center space-x-1">
           <button
+            type="button"
+            aria-label="Prethodna godina"
             className={cn(
               buttonVariants({ variant: variant?.chevrons ?? 'outline' }),
               'absolute left-1 inline-flex h-7 w-7 items-center justify-center p-0'
@@ -144,6 +146,8 @@ function MonthCal({
             <ChevronLeft className="h-4 w-4 opacity-50" />
           </button>
           <button
+            type="button"
+            aria-label="Sljedeća godina"
             className={cn(
               buttonVariants({ variant: variant?.chevrons ?? 'outline' }),
               'absolute right-1 inline-flex h-7 w-7 items-center justify-center p-0'
@@ -171,6 +175,8 @@ function MonthCal({
                       key={m.number}
                     >
                       <button
+                        type="button"
+                        aria-pressed={month === m.number && menuYear === year}
                         className={cn(
                           buttonVariants({
                             variant:

@@ -1,13 +1,20 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isProtectedRoute = createRouteMatcher([
-  "/profiles(.*)",
-  "/bill(.*)",
+  "/dashboard(.*)",
+  "/calendar(.*)",
+  "/bills(.*)",
+  "/stats(.*)",
+  "/account(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) await auth.protect();
-});
+export default clerkMiddleware(
+  async (auth, req) => {
+    if (isProtectedRoute(req)) await auth.protect();
+  },
+  // Send signed-out visitors to our own pages, not Clerk's hosted portal.
+  { signInUrl: "/sign-in", signUpUrl: "/sign-up" },
+);
 
 export const config = {
   matcher: [

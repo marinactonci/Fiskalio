@@ -1,6 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Fonts are bundled from npm instead of next/font/google, so the build never
+   has to reach Google Fonts (a bad response there failed a Vercel build).
+   Every subset is declared with a unicode-range, so browsers only download
+   latin / latin-ext. */
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/bricolage-grotesque/wght.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+
 /* Single light theme. The `dark` variant is bound to a `.dark` class that is
    never set, so stray `dark:` utilities in ui components stay inert instead of
    following the OS color scheme. */
@@ -72,6 +82,12 @@
 
 :root {
   --radius: 0.75rem;
+
+  /* Family names of the @fontsource fonts imported above, so builds never
+     depend on fetching from Google Fonts. */
+  --font-inter: "Inter Variable";
+  --font-bricolage: "Bricolage Grotesque Variable";
+  --font-plex-mono: "IBM Plex Mono";
 
   --paper: #f1f1ec;
   --ink: #15171c;

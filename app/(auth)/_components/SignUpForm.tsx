@@ -4,6 +4,12 @@ import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSignUp } from "@clerk/nextjs";
 import { toast } from "sonner";
+import {
+  CODE_LENGTH,
+  CodeStatus,
+  OtpInput,
+  useCodeCheck,
+} from "@/components/auth/OtpInput";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import {
   clerkErrorCode,
@@ -17,7 +23,6 @@ import {
   AuthInput,
   AuthSwitchLink,
   AuthTabs,
-  CodeInput,
   FormError,
   GoogleButton,
   OrDivider,
@@ -45,6 +50,7 @@ export function SignUpForm() {
   const [googlePending, setGooglePending] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const codeCheck = useCodeCheck();
 
   async function onDetails(e: FormEvent) {
     e.preventDefault();
@@ -83,27 +89,33 @@ export function SignUpForm() {
     }
   }
 
-  async function onVerify(e: FormEvent) {
-    e.preventDefault();
+  function verify(entered: string) {
     if (!isLoaded) return;
-    setError(null);
-    setPending(true);
-    try {
-      const res = await signUp.attemptEmailAddressVerification({
-        code: code.trim(),
-      });
-      if (res.status === "complete" && res.createdSessionId) {
-        await setActive({ session: res.createdSessionId });
-        router.push(resolveRedirect(params.get("redirect_url")));
-        return; // keep the spinner while navigating
+    void codeCheck.run(async () => {
+      setError(null);
+      try {
+        const res = await signUp.attemptEmailAddressVerification({
+          code: entered,
+        });
+        if (res.status === "complete" && res.createdSessionId) {
+          await setActive({ session: res.createdSessionId });
+          router.push(resolveRedirect(params.get("redirect_url")));
+          return true; // keep the spinner while navigating
+        }
+        setError(
+          "Registracija nije dovršena jer nedostaju podaci. Pokušajte ponovno ili se registrirajte Googleom.",
+        );
+      } catch (err) {
+        setCode("");
+        setError(clerkErrorMessage(err));
       }
-      setError(
-        "Registracija nije dovršena jer nedostaju podaci. Pokušajte ponovno ili se registrirajte Googleom.",
-      );
-    } catch (err) {
-      setError(clerkErrorMessage(err));
-    }
-    setPending(false);
+    });
+  }
+
+  // Enter in the code field; normally the last digit already started the check.
+  function onVerify(e: FormEvent) {
+    e.preventDefault();
+    if (code.length === CODE_LENGTH) verify(code);
   }
 
   async function resendCode() {
@@ -112,6 +124,7 @@ export function SignUpForm() {
     setResending(true);
     try {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setCode("");
       toast.success("Novi kod je poslan.");
     } catch (err) {
       setError(clerkErrorMessage(err));
@@ -145,29 +158,41 @@ export function SignUpForm() {
         </AuthHeading>
         <form onSubmit={onVerify} className="mt-7 flex flex-col gap-4">
           <AuthField id="signup-code" label="Kod iz e-pošte">
-            <CodeInput
+            <OtpInput
+              ref={codeCheck.inputRef}
               id="signup-code"
               name="code"
-              required
               autoFocus
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              onChange={(next) => {
+                setCode(next);
+                if (error) setError(null);
+              }}
+              onComplete={verify}
+              disabled={!isLoaded || codeCheck.checking}
+              invalid={error !== null}
+              aria-describedby={
+                error
+                  ? "signup-code-error signup-code-status"
+                  : "signup-code-status"
+              }
+            />
+            <CodeStatus
+              id="signup-code-status"
+              checking={codeCheck.checking}
             />
           </AuthField>
-          <FormError message={error} />
-          <SubmitButton
-            pending={pending}
-            pendingLabel="Provjera…"
-            disabled={!isLoaded}
-          >
-            Potvrdi i nastavi
-          </SubmitButton>
+          <FormError id="signup-code-error" message={error} />
         </form>
         <div className="mt-6 flex flex-col items-start gap-3 text-sm">
-          <TextButton onClick={resendCode} disabled={resending}>
+          <TextButton
+            onClick={resendCode}
+            disabled={resending || codeCheck.checking}
+          >
             {resending ? "Slanje…" : "Pošalji kod ponovno"}
           </TextButton>
           <TextButton
+            disabled={codeCheck.checking}
             onClick={() => {
               setError(null);
               setStep("details");

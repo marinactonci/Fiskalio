@@ -4,6 +4,12 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSignIn } from "@clerk/nextjs";
 import { toast } from "sonner";
+import {
+  CODE_LENGTH,
+  CodeStatus,
+  OtpInput,
+  useCodeCheck,
+} from "@/components/auth/OtpInput";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { clerkErrorMessage } from "@/components/auth/clerk-errors";
 import { resolveRedirect } from "./redirect";
@@ -13,7 +19,6 @@ import {
   AuthInput,
   AuthSwitchLink,
   AuthTabs,
-  CodeInput,
   FormError,
   GoogleButton,
   OrDivider,
@@ -79,6 +84,7 @@ export function SignInForm() {
   const [googlePending, setGooglePending] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const codeCheck = useCodeCheck();
 
   // A Google sign-in for an account with two-step verification comes back
   // from /sso-callback to /sign-in?korak=provjera with the attempt pending.
@@ -158,13 +164,36 @@ export function SignInForm() {
     );
   }
 
+  /** TOTP and e-mail codes: runs as soon as the sixth digit is in. */
+  function verifySecondFactor(entered: string) {
+    if (!isLoaded || factor === "backup_code") return;
+    void codeCheck.run(async () => {
+      setError(null);
+      try {
+        const navigating = await handleResult(
+          await signIn.attemptSecondFactor({ strategy: factor, code: entered }),
+        );
+        if (!navigating) setCode("");
+        return navigating;
+      } catch (err) {
+        setCode("");
+        setError(clerkErrorMessage(err));
+      }
+    });
+  }
+
   function onSecondFactor(e: FormEvent) {
     e.preventDefault();
     if (!isLoaded) return;
+    if (factor !== "backup_code") {
+      // Enter in the code field; normally the last digit already did this.
+      if (code.length === CODE_LENGTH) verifySecondFactor(code);
+      return;
+    }
     void run(async () =>
       handleResult(
         await signIn.attemptSecondFactor({
-          strategy: factor,
+          strategy: "backup_code",
           code: code.trim(),
         }),
       ),
@@ -212,6 +241,7 @@ export function SignInForm() {
       } else {
         await signIn.prepareSecondFactor({ strategy: "email_code" });
       }
+      setCode("");
       toast.success("Novi kod je poslan.");
     } catch (err) {
       setError(clerkErrorMessage(err));
@@ -237,7 +267,12 @@ export function SignInForm() {
   }
 
   const backToSignIn = (
-    <TextButton onClick={() => goTo("credentials")} className="text-sm">
+    <TextButton
+      onClick={() => goTo("credentials")}
+      // Going back mid-check would let a new sign-in overlap the running one.
+      disabled={codeCheck.checking}
+      className="text-sm"
+    >
       Natrag na prijavu
     </TextButton>
   );
@@ -275,38 +310,63 @@ export function SignInForm() {
               id="second-factor-code"
               label={factor === "totp" ? "Kod iz aplikacije" : "Kod iz e-pošte"}
             >
-              <CodeInput
+              <OtpInput
+                // Remount per factor so autoFocus lands in the new field.
+                key={factor}
+                ref={codeCheck.inputRef}
                 id="second-factor-code"
                 name="code"
-                required
                 autoFocus
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                onChange={(next) => {
+                  setCode(next);
+                  if (error) setError(null);
+                }}
+                onComplete={verifySecondFactor}
+                disabled={!isLoaded || codeCheck.checking}
+                invalid={error !== null}
+                aria-describedby={
+                  error
+                    ? "second-factor-code-error second-factor-code-status"
+                    : "second-factor-code-status"
+                }
+              />
+              <CodeStatus
+                id="second-factor-code-status"
+                checking={codeCheck.checking}
               />
             </AuthField>
           )}
-          <FormError message={error} />
-          <SubmitButton
-            pending={pending}
-            pendingLabel="Provjera…"
-            disabled={!isLoaded}
-          >
-            Potvrdi
-          </SubmitButton>
+          <FormError id="second-factor-code-error" message={error} />
+          {factor === "backup_code" ? (
+            <SubmitButton
+              pending={pending}
+              pendingLabel="Provjera…"
+              disabled={!isLoaded}
+            >
+              Potvrdi
+            </SubmitButton>
+          ) : null}
         </form>
         <div className="mt-6 flex flex-col items-start gap-3 text-sm">
           {factor === "totp" ? (
-            <TextButton onClick={() => switchFactor("backup_code")}>
+            <TextButton
+              onClick={() => switchFactor("backup_code")}
+              disabled={codeCheck.checking}
+            >
               Nemate pristup aplikaciji? Koristite rezervni kod
             </TextButton>
           ) : null}
           {factor === "backup_code" ? (
-            <TextButton onClick={() => switchFactor("totp")}>
+            <TextButton onClick={() => switchFactor("totp")} disabled={pending}>
               Koristite kod iz aplikacije
             </TextButton>
           ) : null}
           {factor === "email_code" ? (
-            <TextButton onClick={resendCode} disabled={resending}>
+            <TextButton
+              onClick={resendCode}
+              disabled={resending || codeCheck.checking}
+            >
               {resending ? "Slanje…" : "Pošalji kod ponovno"}
             </TextButton>
           ) : null}
@@ -359,13 +419,16 @@ export function SignInForm() {
         </AuthHeading>
         <form onSubmit={onForgotReset} className="mt-7 flex flex-col gap-4">
           <AuthField id="reset-code" label="Kod iz e-pošte">
-            <CodeInput
+            {/* No auto-check here: the new password below goes in the same
+                request, so this step keeps its submit button. */}
+            <OtpInput
               id="reset-code"
               name="code"
               required
+              minLength={CODE_LENGTH}
               autoFocus
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              onChange={setCode}
             />
           </AuthField>
           <AuthField

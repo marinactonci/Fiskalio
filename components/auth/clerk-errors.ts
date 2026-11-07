@@ -51,8 +51,30 @@ const MESSAGES: Record<string, string> = {
 
 const EMAIL_PARAMS = new Set(["identifier", "email_address", "emailAddress"]);
 
+/**
+ * Thrown when the identity check went through but the server still refused
+ * the change, so the change did not happen.
+ */
+export class ReverificationFailedError extends Error {
+  constructor() {
+    super("Reverification did not satisfy the server");
+    this.name = "ReverificationFailedError";
+  }
+}
+
+/** Thrown when the user backs out of an identity check we asked for ourselves. */
+export class ReverificationCancelledError extends Error {
+  constructor() {
+    super("User cancelled the identity check");
+    this.name = "ReverificationCancelledError";
+  }
+}
+
 /** Turns any error thrown by Clerk into a user-facing Croatian sentence. */
 export function clerkErrorMessage(err: unknown, fallback = GENERIC_ERROR) {
+  if (err instanceof ReverificationFailedError) {
+    return "Potvrda identiteta nije prošla, pa promjena nije spremljena. Pokušajte ponovno.";
+  }
   if (isClerkAPIResponseError(err)) {
     const first = err.errors[0];
     if (!first) return fallback;
@@ -73,9 +95,12 @@ export function clerkErrorMessage(err: unknown, fallback = GENERIC_ERROR) {
   return fallback;
 }
 
-/** True for the error thrown when the user closes Clerk's re-auth prompt. */
+/** True when the user closed the "confirm it's you" dialog without verifying. */
 export function isReverificationCancelled(err: unknown) {
-  return isReverificationCancelledError(err);
+  return (
+    err instanceof ReverificationCancelledError ||
+    isReverificationCancelledError(err)
+  );
 }
 
 /** First Clerk error code, if any (used to branch on specific failures). */

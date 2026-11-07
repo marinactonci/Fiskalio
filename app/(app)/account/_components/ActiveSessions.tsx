@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useReverification, useSession } from "@clerk/nextjs";
+import { useSession } from "@clerk/nextjs";
+import { useReverification } from "./Reverification";
 import { formatDistanceToNow } from "date-fns";
 import { hr } from "date-fns/locale";
 import { Monitor, Smartphone } from "lucide-react";

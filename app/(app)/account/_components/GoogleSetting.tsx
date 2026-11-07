@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useReverification } from "@clerk/nextjs";
+import { useReverification } from "./Reverification";
 import { toast } from "sonner";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
 import {

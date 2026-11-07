@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useReverification } from "@clerk/nextjs";
+import { useReverification } from "./Reverification";
 import { Copy, Download, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -28,6 +28,7 @@ import {
   type ClerkUser,
   type TotpResource,
 } from "./shared";
+import { CODE_LENGTH, useCodeCheck } from "@/components/auth/OtpInput";
 import { cn } from "@/lib/utils";
 
 export function TwoFactorSetting({ user }: { user: ClerkUser }) {
@@ -175,28 +176,33 @@ function TotpSetup({
     user.verifyTOTP({ code }),
   );
   const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [backupCodes, setBackupCodes] = useState<string[] | null>(null);
+  const codeCheck = useCodeCheck();
 
   const secret = totp.secret ?? "";
   const groupedSecret = secret.match(/.{1,4}/g)?.join(" ") ?? secret;
 
-  async function onSubmit(e: FormEvent) {
+  function verify(entered: string) {
+    void codeCheck.run(async () => {
+      setError(null);
+      try {
+        const res = await verifyTOTP(entered);
+        await user.reload();
+        toast.success("Dvostruka provjera je uključena.");
+        if (res.backupCodes?.length) setBackupCodes(res.backupCodes);
+        else onClose();
+      } catch (err) {
+        setCode("");
+        setError(errorText(err));
+      }
+    });
+  }
+
+  // Enter in the code field; normally the last digit already started the check.
+  function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await verifyTOTP(code.trim());
-      await user.reload();
-      toast.success("Dvostruka provjera je uključena.");
-      if (res.backupCodes?.length) setBackupCodes(res.backupCodes);
-      else onClose();
-    } catch (err) {
-      setError(errorText(err));
-    } finally {
-      setBusy(false);
-    }
+    if (code.length === CODE_LENGTH) verify(code);
   }
 
   if (backupCodes) return <BackupCodes codes={backupCodes} onClose={onClose} />;
@@ -255,23 +261,22 @@ function TotpSetup({
             id="totp-code"
             label="Kod iz aplikacije"
             value={code}
-            onChange={setCode}
+            onChange={(next) => {
+              setCode(next);
+              if (error) setError(null);
+            }}
+            onComplete={verify}
+            checking={codeCheck.checking}
+            errorId={error ? "totp-code-error" : undefined}
+            inputRef={codeCheck.inputRef}
           />
         </li>
       </ol>
 
-      <InlineError message={error} />
+      <InlineError id="totp-code-error" message={error} />
       <DialogFooter className="gap-2">
         <button type="button" className={btn.ghost} onClick={onClose}>
           Odustani
-        </button>
-        <button
-          type="submit"
-          className={btn.primary}
-          disabled={busy || code.length < 6}
-        >
-          {busy ? <Spinner /> : null}
-          Uključi
         </button>
       </DialogFooter>
     </form>

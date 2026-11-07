@@ -164,31 +164,17 @@ export function AuthInput({
   return <Input {...props} className={cn(authInputClass, className)} />;
 }
 
-export function CodeInput({
-  className,
-  ...props
-}: Omit<React.ComponentProps<typeof Input>, "type">) {
-  return (
-    <Input
-      type="text"
-      inputMode="numeric"
-      autoComplete="one-time-code"
-      maxLength={6}
-      pattern="[0-9]*"
-      {...props}
-      className={cn(
-        authInputClass,
-        "font-mono text-lg tracking-[0.35em] md:text-lg",
-        className,
-      )}
-    />
-  );
-}
-
-export function FormError({ message }: { message: string | null }) {
+export function FormError({
+  id,
+  message,
+}: {
+  id?: string;
+  message: string | null;
+}) {
   if (!message) return null;
   return (
     <p
+      id={id}
       role="alert"
       className="rounded-xl border border-late-border bg-late-bg px-3.5 py-2.5 text-sm font-medium text-late-strong"
     >

@@ -100,7 +100,7 @@ function Dashboard({ model }: { model: Model }) {
     .filter((c): c is NonNullable<typeof c> => !!c && c.pct >= 10 && !c.current.isEstimated)
     .sort((a, b) => b.pct - a.pct);
 
-  const nextOpenCount = model.bills.filter((b) => {
+  const nextOpenCount = model.activeBills.filter((b) => {
     const p = b.profileId;
     return (
       (filters.profiles.length === 0 || filters.profiles.includes(p)) &&
@@ -113,7 +113,7 @@ function Dashboard({ model }: { model: Model }) {
 
   if (model.profiles.length === 0) {
     return (
-      <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+      <div className="mx-auto flex max-w-369 flex-col gap-6">
         <PageHeader eyebrow={longToday(today)} title="Dobro došli u Fiskalio" />
         <EmptyState
           title="Krenimo od prvog profila"
@@ -128,7 +128,7 @@ function Dashboard({ model }: { model: Model }) {
   }
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-5">
+    <div className="mx-auto flex max-w-360 flex-col gap-5">
       <PageHeader eyebrow={longToday(today)} title={monthTitle(today)}>
         <Button onClick={() => openInstance()} className="hidden sm:inline-flex">
           <Plus aria-hidden /> Nova uplata
@@ -140,7 +140,7 @@ function Dashboard({ model }: { model: Model }) {
       )}
 
       {/* KPI */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-ink p-5 text-white">
           <p className="text-[13px] text-[#B9BCC4]">Preostalo za platiti</p>
           <p className="mt-2 font-mono text-[28px] font-semibold tracking-tight">{formatMoney(t.due + t.late)}</p>
@@ -248,7 +248,7 @@ function Dashboard({ model }: { model: Model }) {
         </Card>
 
         {/* Side */}
-        <div className="flex min-w-0 flex-[1_1_300px] flex-col gap-4">
+        <div className="flex min-w-0 flex-[1_1_340px] flex-col gap-4">
           {profileSplit.length > 0 && (
             <Card className="p-5">
               <h2 className="mb-3.5 text-[15px] font-bold">Ovaj mjesec po profilu</h2>
@@ -307,7 +307,7 @@ function Dashboard({ model }: { model: Model }) {
           )}
 
           <section className="rounded-2xl bg-lime p-5">
-            {model.bills.length ? (
+            {model.activeBills.length ? (
               <>
                 <p className="font-bold">
                   {monthTitle(addMonths(today, 1)).split(" ")[0]} se otvara za {daysToNext}{" "}
@@ -315,7 +315,7 @@ function Dashboard({ model }: { model: Model }) {
                 </p>
                 <p className="mt-1.5 text-[#2A2E35]">
                   1.{addMonths(today, 1).getMonth() + 1}. u 00:01 otvorit će se {nextOpenCount}{" "}
-                  {plural(nextOpenCount, "nova uplata", "nove uplate", "novih uplata")} s prošlomjesečnim iznosima.
+                  {plural(nextOpenCount, "nova uplata", "nove uplate", "novih uplata")} s prošlomjesečnim iznosima i datumima dospijeća.
                 </p>
               </>
             ) : (
@@ -352,14 +352,14 @@ function OpenRow({ item: i, today, onEdit }: { item: Item; today: Date; onEdit: 
       </div>
       <span
         className={cn(
-          "w-[128px] text-[13px]",
+          "w-32 text-[13px]",
           i.status === "late" ? "font-semibold text-late" : "text-muted-foreground",
         )}
       >
         {shortDate(i.due)}
         {i.status !== "paid" && ` · ${relativeDue(i.due, today)}`}
       </span>
-      <span className={cn("w-[92px] text-right font-mono text-[15px] font-semibold", i.status === "paid" && "text-muted-foreground line-through")}>
+      <span className={cn("w-23 text-right font-mono text-[15px] font-semibold", i.status === "paid" && "text-muted-foreground line-through")}>
         {formatMoney(i.amount)}
       </span>
       {i.bill.eBillLink ? (

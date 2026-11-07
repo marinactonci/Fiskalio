@@ -76,6 +76,7 @@ export function CommandPalette() {
                   />
                   <span className="font-medium">{b.name}</span>
                   <span className="text-muted-foreground">{p?.name}</span>
+                  {b.archivedAt && <span className="ml-auto text-xs text-muted-foreground">arhiviran</span>}
                 </CommandItem>
               );
             })}

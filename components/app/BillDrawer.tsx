@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { Check, Copy, ExternalLink, Eye, EyeOff, Pencil, Plus } from "lucide-react";
+import { Archive, Check, Copy, ExternalLink, Eye, EyeOff, Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useAppActions } from "@/components/app/AppActions";
 import { EstimatedChip, StatusPill } from "@/components/app/bits";
-import type { Item, Model, OBill } from "@/lib/data";
+import { nextDueDay, type Item, type Model, type OBill } from "@/lib/data";
 import {
   formatMoney,
   formatPercent,
@@ -52,8 +52,16 @@ export function BillDrawer({
 function DrawerBody({ model, bill, history }: { model: Model; bill: OBill; history: Item[] }) {
   const { openBill, openInstance } = useAppActions();
   const setPaid = useMutation(api.billInstances.setPaid);
+  const setArchived = useMutation(api.bills.setBillArchived);
   const [showAll, setShowAll] = useState(false);
   const profile = model.profileById.get(bill.profileId);
+  const nextDue = nextDueDay(bill, history);
+
+  const restore = async () => {
+    const res = await setArchived({ id: bill._id as Id<"bills">, archived: false });
+    if (res.success) toast.success("Račun je vraćen iz arhive.");
+    else toast.error(res.error || "Promjena nije uspjela.");
+  };
 
   const monthKey = toMonthKey(model.today);
   const desc = [...history].reverse();
@@ -90,6 +98,19 @@ function DrawerBody({ model, bill, history }: { model: Model; bill: OBill; histo
           <Pencil aria-hidden />
         </Button>
       </SheetHeader>
+
+      {bill.archivedAt && (
+        <div className="flex items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3">
+          <Archive className="size-4 shrink-0 text-ink-2" aria-hidden />
+          <p className="flex-1 text-[13px] text-ink-2">
+            <b className="text-ink">Arhiviran {fullDate(new Date(bill.archivedAt))}.</b> Nove uplate se ne otvaraju,
+            povijest ostaje.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => void restore()}>
+            Vrati
+          </Button>
+        </div>
+      )}
 
       {current ? (
         <div className="rounded-2xl bg-ink p-[18px] text-white">
@@ -229,18 +250,33 @@ function DrawerBody({ model, bill, history }: { model: Model; bill: OBill; histo
             Uredi
           </button>
         </div>
-        <div className="flex justify-between gap-2.5">
-          <span className="text-ink-2">Nova uplata svakog</span>
-          <span className="font-semibold">1. u mjesecu</span>
-        </div>
-        <div className="flex justify-between gap-2.5">
-          <span className="text-ink-2">Dospijeće</span>
-          <span className="font-semibold">{bill.dueDay ? `${bill.dueDay}. u mjesecu` : "1. u mjesecu (nije postavljeno)"}</span>
-        </div>
-        <div className="flex justify-between gap-2.5">
-          <span className="text-ink-2">Iznos</span>
-          <span className="font-semibold">prepiši prošli mjesec</span>
-        </div>
+        {bill.archivedAt ? (
+          <div className="flex justify-between gap-2.5">
+            <span className="text-ink-2">Nova uplata</span>
+            <span className="font-semibold">ne otvara se (arhiviran)</span>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between gap-2.5">
+              <span className="text-ink-2">Nova uplata svakog</span>
+              <span className="font-semibold">1. u mjesecu</span>
+            </div>
+            <div className="flex justify-between gap-2.5">
+              <span className="text-ink-2">Dospijeće</span>
+              <span className="text-right font-semibold">
+                {nextDue.source === "bill"
+                  ? `${nextDue.day}. u mjesecu`
+                  : nextDue.source === "last"
+                    ? `kao prošli mjesec (${nextDue.day}.)`
+                    : "1. u mjesecu (nije postavljeno)"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2.5">
+              <span className="text-ink-2">Iznos</span>
+              <span className="font-semibold">prepiši prošli mjesec</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

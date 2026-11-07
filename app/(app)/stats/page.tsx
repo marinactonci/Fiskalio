@@ -114,7 +114,7 @@ function Stats({ model }: { model: Model }) {
 
   if (model.profiles.length === 0) {
     return (
-      <div className="mx-auto flex max-w-[1180px] flex-col gap-5">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-5">
         <PageHeader title="Statistika" />
         <EmptyState title="Još nema podataka" action={<Button onClick={() => openProfile()}>Dodaj prvi profil</Button>}>
           Statistika se puni sama kako budete označavali uplate.
@@ -145,7 +145,7 @@ function Stats({ model }: { model: Model }) {
   };
 
   return (
-    <div className="mx-auto flex max-w-[1180px] flex-col gap-4">
+    <div className="mx-auto flex max-w-[1440px] flex-col gap-4">
       <PageHeader eyebrow={`${monthLabel(months[0])} – ${monthLabel(months[months.length - 1])}`} title="Statistika">
         <Button variant="outline" onClick={() => setShowTable((s) => !s)} aria-pressed={showTable}>
           {showTable ? "Sakrij tablicu" : "Prikaži kao tablicu"}

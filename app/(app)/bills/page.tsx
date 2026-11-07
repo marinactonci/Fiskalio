@@ -1,8 +1,10 @@
 "use client";
 
-import { MoreHorizontal, Plus, Search } from "lucide-react";
+import { useMutation } from "convex/react";
+import { Archive, ChevronDown, MoreHorizontal, Plus, Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,10 +22,20 @@ import {
   StatusPill,
 } from "@/components/app/bits";
 import { BillDrawer } from "@/components/app/BillDrawer";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useModel } from "@/hooks/use-model";
-import type { Item, Model, OBill } from "@/lib/data";
-import { formatMoney, plural, toMonthKey } from "@/lib/format";
+import { nextDueDay, type Item, type Model, type OBill } from "@/lib/data";
+import { formatMoney, fullDate, plural, toMonthKey } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+/** Subtitle for a bill row: where the next instance's due day comes from. */
+function dueText(bill: OBill, history: Item[]): string {
+  const next = nextDueDay(bill, history);
+  if (next.source === "bill") return `dospijeće ${next.day}. u mjesecu`;
+  if (next.source === "last") return `dospijeće kao prošli mjesec (${next.day}.)`;
+  return "dan dospijeća nije postavljen";
+}
 
 export default function BillsPage() {
   const state = useModel();
@@ -37,7 +49,23 @@ function Bills({ model }: { model: Model }) {
   const router = useRouter();
   const pathname = usePathname();
   const { openBill, openProfile } = useAppActions();
+  const setArchived = useMutation(api.bills.setBillArchived);
   const [query, setQuery] = useState("");
+  const [openArchives, setOpenArchives] = useState<Set<string>>(new Set());
+
+  const toggleArchive = (profileId: string) =>
+    setOpenArchives((s) => {
+      const next = new Set(s);
+      if (next.has(profileId)) next.delete(profileId);
+      else next.add(profileId);
+      return next;
+    });
+
+  const restore = async (b: OBill) => {
+    const res = await setArchived({ id: b._id as Id<"bills">, archived: false });
+    if (res.success) toast.success(`${b.name} je vraćen iz arhive.`);
+    else toast.error(res.error || "Promjena nije uspjela.");
+  };
 
   const selectedBill = params.get("bill");
   const focusProfile = params.get("profile");
@@ -67,7 +95,8 @@ function Bills({ model }: { model: Model }) {
     const h = history.get(b._id) ?? [];
     return h.length ? h[h.length - 1] : undefined;
   };
-  const monthlyTotal = model.bills.reduce((a, b) => a + (latest(b)?.amount ?? 0), 0);
+  const monthlyTotal = model.activeBills.reduce((a, b) => a + (latest(b)?.amount ?? 0), 0);
+  const activeCount = model.activeBills.length;
 
   const q = query.trim().toLowerCase();
   const matches = (b: OBill) => {
@@ -79,12 +108,12 @@ function Bills({ model }: { model: Model }) {
   const drawerBill = selectedBill ? model.billById.get(selectedBill) : undefined;
 
   return (
-    <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
+    <div className="mx-auto flex max-w-[1440px] flex-col gap-5">
       <PageHeader
         title="Računi"
         eyebrow={
-          model.bills.length
-            ? `${model.bills.length} ${plural(model.bills.length, "račun", "računa", "računa")} u ${model.profiles.length} ${plural(model.profiles.length, "profilu", "profila", "profila")} · oko ${formatMoney(monthlyTotal)} mjesečno`
+          activeCount
+            ? `${activeCount} ${plural(activeCount, "račun", "računa", "računa")} u ${model.profiles.length} ${plural(model.profiles.length, "profilu", "profila", "profila")} · oko ${formatMoney(monthlyTotal)} mjesečno`
             : undefined
         }
       >
@@ -118,8 +147,14 @@ function Bills({ model }: { model: Model }) {
           </label>
 
           {model.profiles.map((p) => {
-            const bills = model.bills.filter((b) => b.profileId === p._id && matches(b));
-            if (q && !bills.length) return null;
+            const all = model.bills.filter((b) => b.profileId === p._id && matches(b));
+            if (q && !all.length) return null;
+            const bills = all.filter((b) => !b.archivedAt);
+            const archived = all.filter((b) => b.archivedAt);
+            const archiveOpen =
+              openArchives.has(p._id) ||
+              (!!q && archived.length > 0) ||
+              archived.some((b) => b._id === selectedBill);
             const profileSum = bills.reduce((a, b) => a + (latest(b)?.amount ?? 0), 0);
             return (
               <Card
@@ -152,7 +187,7 @@ function Bills({ model }: { model: Model }) {
                 </div>
                 {bills.length === 0 ? (
                   <div className="flex flex-wrap items-center justify-between gap-3 px-[18px] py-4 text-sm text-ink-2">
-                    Ovaj profil još nema računa.
+                    {archived.length ? "Ovaj profil nema aktivnih računa." : "Ovaj profil još nema računa."}
                     <Button size="sm" variant="outline" onClick={() => openBill({ profileId: p._id })}>
                       <Plus aria-hidden /> Dodaj račun
                     </Button>
@@ -180,7 +215,7 @@ function Bills({ model }: { model: Model }) {
                             <span className="min-w-0 flex-[1_1_170px]">
                               <span className="block truncate text-[15px] font-semibold">{b.name}</span>
                               <span className="text-xs text-muted-foreground">
-                                {b.dueDay ? `dospijeće ${b.dueDay}. u mjesecu` : "dan dospijeća nije postavljen"}
+                                {dueText(b, h)}
                                 {b.hasEBill ? " · e-račun" : ""}
                               </span>
                             </span>
@@ -208,6 +243,59 @@ function Bills({ model }: { model: Model }) {
                       );
                     })}
                   </ul>
+                )}
+                {archived.length > 0 && (
+                  <div className="border-t border-line-soft bg-[#FAFAF7]">
+                    <button
+                      type="button"
+                      aria-expanded={archiveOpen}
+                      onClick={() => toggleArchive(p._id)}
+                      className="flex w-full items-center gap-2.5 px-[18px] py-3 text-left text-sm font-semibold text-ink-2"
+                    >
+                      <ChevronDown className={cn("size-4 transition", !archiveOpen && "-rotate-90")} aria-hidden />
+                      <Archive className="size-4" aria-hidden />
+                      Arhivirano · {archived.length} {plural(archived.length, "račun", "računa", "računa")}
+                    </button>
+                    {archiveOpen && (
+                      <ul>
+                        {archived.map((b) => {
+                          const h = history.get(b._id) ?? [];
+                          const last = h[h.length - 1];
+                          const selected = selectedBill === b._id;
+                          return (
+                            <li
+                              key={b._id}
+                              className={cn(
+                                "flex items-center gap-3 border-t border-line-soft pr-[18px]",
+                                selected && "bg-lime-soft shadow-[inset_3px_0_0_var(--ink)]",
+                              )}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => setBill(b._id)}
+                                aria-current={selected ? "true" : undefined}
+                                className="flex min-w-0 flex-1 flex-wrap items-center gap-4 py-3 pl-[18px] text-left"
+                              >
+                                <span className="min-w-0 flex-[1_1_170px]">
+                                  <span className="block truncate text-[15px] font-semibold text-ink-2">{b.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    arhiviran {fullDate(new Date(b.archivedAt!))} · {h.length}{" "}
+                                    {plural(h.length, "uplata", "uplate", "uplata")} u povijesti
+                                  </span>
+                                </span>
+                                <span className="w-[88px] text-right font-mono font-semibold text-ink-2">
+                                  {last ? formatMoney(last.amount) : "—"}
+                                </span>
+                              </button>
+                              <Button size="sm" variant="outline" onClick={() => void restore(b)}>
+                                Vrati iz arhive
+                              </Button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
                 )}
               </Card>
             );

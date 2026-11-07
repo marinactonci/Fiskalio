@@ -156,7 +156,7 @@ function CalendarView({ model }: { model: Model }) {
 
   if (model.profiles.length === 0) {
     return (
-      <div className="mx-auto flex max-w-[1180px] flex-col gap-5">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-5">
         <PageHeader title="Kalendar" />
         <EmptyState
           title="Kalendar je još prazan"
@@ -172,7 +172,7 @@ function CalendarView({ model }: { model: Model }) {
   const selectedItems = selectedDay ? byDate.get(selectedDay) ?? [] : [];
 
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-4">
+    <div className="mx-auto flex max-w-[1440px] flex-col gap-4">
       <PageHeader
         title={
           <span className="flex flex-wrap items-center gap-3">
@@ -342,7 +342,7 @@ function CalendarView({ model }: { model: Model }) {
         </div>
 
         {/* Stats rail */}
-        <aside aria-label="Statistika odabira" className="flex min-w-0 flex-[1_1_290px] flex-col gap-3.5">
+        <aside aria-label="Statistika odabira" className="flex min-w-0 flex-[1_1_340px] flex-col gap-3.5">
           <section className="rounded-2xl bg-ink p-[18px] text-white">
             <p className="text-[13px] text-[#B9BCC4]">Zbroj odabranog</p>
             <p className="mt-1.5 font-mono text-[30px] font-semibold tracking-tight">{formatMoney(t.total)}</p>

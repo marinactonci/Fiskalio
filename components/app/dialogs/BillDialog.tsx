@@ -50,6 +50,8 @@ export function BillDialog({
   const createBill = useMutation(api.bills.createBillForProfile);
   const updateBill = useMutation(api.bills.updateBill);
   const deleteBill = useMutation(api.bills.deleteBill);
+  const setArchived = useMutation(api.bills.setBillArchived);
+  const isArchived = !!existing?.archivedAt;
 
   const [name, setName] = useState(existing?.name ?? "");
   const [profileId, setProfileId] = useState<string>(
@@ -63,6 +65,7 @@ export function BillDialog({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
 
   // Prefill decrypted e-bill credentials once the full bill has loaded.
   useEffect(() => {
@@ -144,6 +147,19 @@ export function BillDialog({
     } else toast.error(res.error || "Brisanje nije uspjelo.");
   };
 
+  const doArchive = async (archived: boolean) => {
+    if (!billId) return;
+    const res = await setArchived({ id: billId as Id<"bills">, archived });
+    if (res.success) {
+      toast.success(
+        archived
+          ? "Račun je arhiviran. Povijest uplata ostaje."
+          : "Račun je vraćen iz arhive.",
+      );
+      onOpenChange(false);
+    } else toast.error(res.error || "Promjena nije uspjela.");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
@@ -200,8 +216,9 @@ export function BillDialog({
               </Field>
             </div>
             <p className="-mt-2 text-xs text-muted-foreground">
-              Prvog u mjesecu Fiskalio otvara novu uplatu s ovim danom
-              dospijeća i prošlomjesečnim iznosom.
+              {isArchived
+                ? "Račun je arhiviran – nove uplate se više ne otvaraju."
+                : "Prvog u mjesecu Fiskalio otvara novu uplatu s prošlomjesečnim iznosom i danom dospijeća. Upišite dan samo ako želite da uvijek bude isti."}
             </p>
 
             <fieldset className="flex flex-col gap-3 rounded-2xl border border-line p-4">
@@ -245,14 +262,24 @@ export function BillDialog({
 
             <DialogFooter className="mt-2 flex-col-reverse gap-2 sm:flex-row sm:items-center">
               {isEdit && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-late hover:bg-late-bg hover:text-late sm:mr-auto"
-                  onClick={() => setConfirmDelete(true)}
-                >
-                  Obriši račun
-                </Button>
+                <div className="flex gap-1 sm:mr-auto">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 sm:flex-none"
+                    onClick={() => (isArchived ? void doArchive(false) : setConfirmArchive(true))}
+                  >
+                    {isArchived ? "Vrati iz arhive" : "Arhiviraj"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 text-late hover:bg-late-bg hover:text-late sm:flex-none"
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    Obriši
+                  </Button>
+                </div>
               )}
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Odustani
@@ -268,9 +295,30 @@ export function BillDialog({
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
         title={`Obrisati „${existing?.name ?? "račun"}”?`}
-        description={`Trajno se brišu račun i ${instanceCount} ${plural(instanceCount, "uplata", "uplate", "uplata")} povezanih s njim.`}
-        confirmLabel="Obriši račun"
+        description={
+          isArchived
+            ? `Trajno se brišu račun i ${instanceCount} ${plural(instanceCount, "uplata", "uplate", "uplata")} povezanih s njim. Nestat će i iz kalendara i statistike.`
+            : `Trajno se brišu račun i ${instanceCount} ${plural(instanceCount, "uplata", "uplate", "uplata")} povezanih s njim. Ako se račun samo mijenja ili gasi, arhivirajte ga – povijest ostaje.`
+        }
+        confirmLabel="Obriši trajno"
         onConfirm={doDelete}
+        secondaryLabel={isArchived ? undefined : "Arhiviraj umjesto toga"}
+        onSecondary={isArchived ? undefined : () => doArchive(true)}
+      />
+      <ConfirmDialog
+        open={confirmArchive}
+        onOpenChange={setConfirmArchive}
+        tone="default"
+        title={`Arhivirati „${existing?.name ?? "račun"}”?`}
+        description={`Od idućeg mjeseca više se neće otvarati nove uplate. ${
+          instanceCount === 0
+            ? ""
+            : instanceCount === 1
+              ? "Postojeća uplata ostaje u kalendaru i statistici. "
+              : `Svih ${instanceCount} ${plural(instanceCount, "uplata", "uplate", "uplata")} ostaje u kalendaru i statistici, a neplaćene i dalje čekaju na popisu. `
+        }Račun možete vratiti iz arhive bilo kada.`}
+        confirmLabel="Arhiviraj"
+        onConfirm={() => doArchive(true)}
       />
     </Dialog>
   );

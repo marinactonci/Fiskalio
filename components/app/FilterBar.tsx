@@ -193,6 +193,7 @@ export function FilterBar({
                             onCheckedChange={() => toggleBill(b._id)}
                           />
                           {b.name}
+                          {b.archivedAt && <span className="text-xs text-muted-foreground">arhiviran</span>}
                           {amt !== undefined && (
                             <span className="ml-auto font-mono text-xs text-muted-foreground">
                               {formatAmount(amt)}

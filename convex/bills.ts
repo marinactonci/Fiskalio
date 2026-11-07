@@ -147,6 +147,32 @@ export const deleteBill = mutation({
   },
 });
 
+/**
+ * Archive or restore a bill. An archived bill keeps all of its instances
+ * (calendar, stats, history) but the monthly cron stops opening new ones.
+ */
+export const setBillArchived = mutation({
+  args: { id: v.id("bills"), archived: v.boolean() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    const bill = await ctx.db.get(args.id);
+
+    if (!bill || bill.userId !== identity.tokenIdentifier) {
+      return { success: false, error: "Bill not found" };
+    }
+
+    await ctx.db.patch(args.id, {
+      archivedAt: args.archived ? Date.now() : undefined,
+    });
+    return { success: true, data: args.id };
+  },
+});
+
 export const updateBill = mutation({
   args: {
     id: v.id("bills"),

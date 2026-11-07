@@ -29,7 +29,10 @@ export interface Item extends OInstance {
 
 export interface Model {
   profiles: OProfile[];
+  /** All bills, archived included (their history still shows everywhere). */
   bills: OBill[];
+  /** Bills that still get new monthly instances. */
+  activeBills: OBill[];
   items: Item[];
   profileById: Map<string, OProfile>;
   billById: Map<string, OBill>;
@@ -78,7 +81,24 @@ export function buildModel(data: OverviewData, now = new Date()): Model {
   }
   items.sort((a, b) => a.due.getTime() - b.due.getTime());
 
-  return { profiles, bills, items, profileById, billById, today };
+  const activeBills = bills.filter((b) => !b.archivedAt);
+
+  return { profiles, bills, activeBills, items, profileById, billById, today };
+}
+
+/**
+ * Day of the month the next monthly instance will be due, as the cron picks
+ * it: the bill's fixed day, else the day of its latest instance.
+ * `history` is the bill's instances ordered oldest → newest.
+ */
+export function nextDueDay(
+  bill: OBill,
+  history: Item[],
+): { day: number; source: "bill" | "last" | "default" } {
+  if (bill.dueDay) return { day: bill.dueDay, source: "bill" };
+  const last = history[history.length - 1];
+  if (last) return { day: last.due.getDate(), source: "last" };
+  return { day: 1, source: "default" };
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { format } from "date-fns";
+import { dayOfISODate, periodNote } from "../lib/format";
 
 export const createBillInstance = mutation({
   args: {
@@ -9,6 +10,8 @@ export const createBillInstance = mutation({
     amount: v.number(),
     dueDate: v.string(),
     description: v.optional(v.string()),
+    // Payment date (ms since epoch); omitted = not paid yet.
+    paidAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -23,7 +26,8 @@ export const createBillInstance = mutation({
       amount: args.amount,
       dueDate: args.dueDate,
       description: args.description,
-      isPaid: false,
+      isPaid: args.paidAt !== undefined,
+      paidAt: args.paidAt,
       isEstimated: false,
       userId: identity.tokenIdentifier,
     };
@@ -41,6 +45,9 @@ export const updateBillInstance = mutation({
     dueDate: v.optional(v.string()),
     description: v.optional(v.string()),
     isPaid: v.optional(v.boolean()),
+    // Payment date (ms since epoch); null clears it and marks the instance
+    // unpaid. Takes precedence over `isPaid`.
+    paidAt: v.optional(v.union(v.number(), v.null())),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -82,7 +89,10 @@ export const updateBillInstance = mutation({
     if (args.description !== undefined) {
       updates.description = args.description;
     }
-    if (args.isPaid !== undefined && args.isPaid !== billInstance.isPaid) {
+    if (args.paidAt !== undefined) {
+      updates.isPaid = args.paidAt !== null;
+      updates.paidAt = args.paidAt ?? undefined;
+    } else if (args.isPaid !== undefined && args.isPaid !== billInstance.isPaid) {
       updates.isPaid = args.isPaid;
       updates.paidAt = args.isPaid ? Date.now() : undefined;
     }
@@ -198,6 +208,7 @@ export const getOverview = query({
           profileId: b.profileId,
           name: b.name,
           dueDay: b.dueDay,
+          archivedAt: b.archivedAt,
           hasEBill: !!b.eBill,
           eBillLink: b.eBill?.link || undefined,
         })),
@@ -481,6 +492,9 @@ export const generateMonthlyBillInstances = internalMutation({
     // For each user, create bill instances for the previous month
     for (const [userId, userBills] of billsByUser) {
       for (const bill of userBills) {
+        // Archived bills keep their history but get no new instances.
+        if (bill.archivedAt) continue;
+
         // Get all instances for this bill to check for duplicates and get previous amount
         const instances = await ctx.db
           .query("billInstances")
@@ -500,12 +514,16 @@ export const generateMonthlyBillInstances = internalMutation({
             .filter((i) => i.parsedDate && i.parsedDate < previousMonthDate)
             .sort((a, b) => b.parsedDate!.getTime() - a.parsedDate!.getTime());
 
-          const amountToUse =
-            previousInstances.length > 0 ? previousInstances[0].amount : 0;
+          const lastInstance = previousInstances[0];
+          const amountToUse = lastInstance ? lastInstance.amount : 0;
 
-          // Clamp the due day to the length of the current month (e.g. 31 → 30).
+          // Due day: the bill's fixed day if set, else the day of last
+          // month's instance, else the 1st. Clamped to the length of the
+          // current month (e.g. 31 → 30).
           const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
-          const dueDay = Math.min(Math.max(bill.dueDay ?? 1, 1), daysInMonth);
+          const wantedDay =
+            bill.dueDay ?? dayOfISODate(lastInstance?.dueDate) ?? 1;
+          const dueDay = Math.min(Math.max(wantedDay, 1), daysInMonth);
 
           // Create new bill instance; the amount is last month's copy until
           // the user confirms it.
@@ -514,6 +532,7 @@ export const generateMonthlyBillInstances = internalMutation({
             month: billMonth,
             amount: amountToUse,
             dueDate: `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(dueDay).padStart(2, "0")}`,
+            description: periodNote(previousMonthDate),
             isPaid: false,
             isEstimated: true,
             userId: userId,

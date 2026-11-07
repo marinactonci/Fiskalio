@@ -133,15 +133,27 @@ export function parseMonthKey(s: string | null | undefined): Date | null {
  * also written by the monthly cron). Accepts "yyyy-MM" too.
  */
 export function parseBillingMonth(s: string): Date | null {
-  const key = parseMonthKey(s);
+  const strict = parseBillingMonthStrict(s);
+  if (strict) return strict;
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+/**
+ * Only the two stored formats ("November 2026", "2026-11"); unlike
+ * parseBillingMonth it never falls back to Date() guessing, which reads e.g.
+ * "Studeni 2026" as January.
+ */
+export function parseBillingMonthStrict(s: string): Date | null {
+  const t = s.trim();
+  const key = parseMonthKey(t);
   if (key) return key;
-  const m = s.trim().toLowerCase().match(/^([a-z]+)\s+(\d{4})$/);
+  const m = t.toLowerCase().match(/^([a-z]+)\s+(\d{4})$/);
   if (m) {
     const idx = MONTHS_EN.indexOf(m[1]);
     if (idx >= 0) return new Date(Number(m[2]), idx, 1);
   }
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), 1);
+  return null;
 }
 
 /** Date → "November 2026" (storage format for billing periods). */
@@ -179,6 +191,23 @@ export function shortDate(d: Date): string {
 /** "6.11.2026." */
 export function fullDate(d: Date): string {
   return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}.`;
+}
+
+/**
+ * Default note for an instance, from its billing period:
+ * "Račun za razdoblje 1.10.2026. - 31.10.2026."
+ * Also used by the monthly cron (convex/billInstances.ts).
+ */
+export function periodNote(period: Date): string {
+  const first = new Date(period.getFullYear(), period.getMonth(), 1);
+  const last = new Date(period.getFullYear(), period.getMonth() + 1, 0);
+  return `Račun za razdoblje ${fullDate(first)} - ${fullDate(last)}`;
+}
+
+/** "2026-11-15" → 15 (day of month), or undefined if unparseable. */
+export function dayOfISODate(s: string | undefined): number | undefined {
+  const d = Number(s?.split("-")[2]);
+  return Number.isInteger(d) && d >= 1 && d <= 31 ? d : undefined;
 }
 
 /** "Petak, 6. studenoga" */

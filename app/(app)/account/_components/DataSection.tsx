@@ -6,6 +6,7 @@ import { useMutation, useQuery } from "convex/react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
+import { toISODate } from "@/lib/format";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -34,6 +35,7 @@ type ExportRow = {
   amount: number;
   dueDate: string;
   isPaid: boolean;
+  paidAt?: number;
   description?: string;
 };
 
@@ -67,6 +69,7 @@ function buildCsv(rows: ExportRow[]) {
     "Dospijeće",
     "Iznos (EUR)",
     "Plaćeno",
+    "Datum plaćanja",
     "Opis",
   ].join(";");
   const sorted = [...rows].sort(
@@ -83,6 +86,7 @@ function buildCsv(rows: ExportRow[]) {
       textCell(r.dueDate),
       r.amount.toFixed(2).replace(".", ","),
       r.isPaid ? "da" : "ne",
+      r.paidAt ? toISODate(new Date(r.paidAt)) : "",
       textCell(r.description ?? ""),
     ].join(";"),
   );

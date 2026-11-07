@@ -11,6 +11,7 @@
 import type * as billInstances from "../billInstances.js";
 import type * as bills from "../bills.js";
 import type * as crons from "../crons.js";
+import type * as migrations from "../migrations.js";
 import type * as profiles from "../profiles.js";
 import type * as savedViews from "../savedViews.js";
 
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   billInstances: typeof billInstances;
   bills: typeof bills;
   crons: typeof crons;
+  migrations: typeof migrations;
   profiles: typeof profiles;
   savedViews: typeof savedViews;
 }>;

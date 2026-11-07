@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
+import { Check, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -14,18 +15,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { Item, Model } from "@/lib/data";
 import {
   addMonths,
+  fullDate,
   parseISODate,
+  periodNote,
   toBillingMonth,
   toISODate,
   toMonthKey,
   parseMonthKey,
 } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import {
   Field,
   amountToInput,
@@ -52,6 +55,12 @@ function lastAmountFor(model: Model, billId: string): number | undefined {
   return hist.length ? hist[hist.length - 1].amount : undefined;
 }
 
+/** Generated note for a "yyyy-MM" period key ("" if the key is invalid). */
+function autoNote(periodKey: string): string {
+  const d = parseMonthKey(periodKey);
+  return d ? periodNote(d) : "";
+}
+
 export function InstanceDialog({
   open,
   onOpenChange,
@@ -65,23 +74,31 @@ export function InstanceDialog({
   const update = useMutation(api.billInstances.updateBillInstance);
   const remove = useMutation(api.billInstances.deleteBillInstance);
 
-  const initialBill = item?.bill._id ?? defaultBillId ?? model.bills[0]?._id ?? "";
+  const initialBill =
+    item?.bill._id ?? defaultBillId ?? model.activeBills[0]?._id ?? model.bills[0]?._id ?? "";
   const initialDue = item?.dueDate ?? defaultDue ?? toISODate(new Date());
   const initialPeriod = item?.period
     ? toMonthKey(item.period)
     : toMonthKey(addMonths(parseISODate(initialDue), -1));
   const prefill = item?.amount ?? (initialBill ? lastAmountFor(model, initialBill) : undefined);
+  // Older instances may be paid without a recorded date.
+  const legacyPaid = !!item?.isPaid && !item?.paidAt;
 
   const [billId, setBillId] = useState<string>(initialBill);
   const [amount, setAmount] = useState(prefill !== undefined ? amountToInput(prefill) : "");
   const [dueDate, setDueDate] = useState(initialDue);
   const [period, setPeriod] = useState(initialPeriod);
   const [periodTouched, setPeriodTouched] = useState(isEdit);
-  const [note, setNote] = useState(item?.description ?? "");
-  const [isPaid, setIsPaid] = useState(item?.isPaid ?? false);
+  const [note, setNote] = useState(item?.description || autoNote(initialPeriod));
+  const [paidDate, setPaidDate] = useState(item?.paidAt ? toISODate(new Date(item.paidAt)) : "");
+  const [paidTouched, setPaidTouched] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const showLegacyPaid = legacyPaid && !paidTouched;
+  const isPaidNow = !!paidDate || showLegacyPaid;
+  const generatedNote = autoNote(period);
 
   const onBillChange = (id: string) => {
     setBillId(id);
@@ -91,9 +108,20 @@ export function InstanceDialog({
     }
   };
 
+  /** Changes the period and keeps an untouched generated note in step with it. */
+  const changePeriod = (next: string) => {
+    setNote((n) => (!n.trim() || n === autoNote(period) ? autoNote(next) : n));
+    setPeriod(next);
+  };
+
   const onDueChange = (v: string) => {
     setDueDate(v);
-    if (!periodTouched && v) setPeriod(toMonthKey(addMonths(parseISODate(v), -1)));
+    if (!periodTouched && v) changePeriod(toMonthKey(addMonths(parseISODate(v), -1)));
+  };
+
+  const changePaid = (v: string) => {
+    setPaidDate(v);
+    setPaidTouched(true);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -108,6 +136,9 @@ export function InstanceDialog({
     setErrors(errs);
     if (Object.keys(errs).length || !periodDate) return;
 
+    // Stored as local midnight of the chosen day.
+    const paidAt = paidDate ? parseISODate(paidDate).getTime() : undefined;
+
     setSaving(true);
     try {
       const res = isEdit
@@ -117,7 +148,9 @@ export function InstanceDialog({
             dueDate,
             month: toBillingMonth(periodDate),
             description: note.trim(),
-            isPaid,
+            // Only touch payment when the field was changed, so a precise
+            // timestamp from the quick toggle is kept otherwise.
+            paidAt: paidTouched ? (paidAt ?? null) : undefined,
           })
         : await create({
             billId: billId as Id<"bills">,
@@ -125,6 +158,7 @@ export function InstanceDialog({
             dueDate,
             month: toBillingMonth(periodDate),
             description: note.trim() || undefined,
+            paidAt,
           });
       if (res.success) {
         toast.success(isEdit ? "Uplata je spremljena." : "Uplata je dodana.");
@@ -150,17 +184,20 @@ export function InstanceDialog({
 
   const bill = model.billById.get(billId);
   const profile = bill ? model.profileById.get(bill.profileId) : undefined;
+  // New instances go to active bills; an archived bill is offered only when
+  // the dialog was opened for it (e.g. from its detail panel).
+  const pickable = model.bills.filter((b) => !b.archivedAt || b._id === initialBill);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl font-bold tracking-tight">
             {isEdit ? `${item!.bill.name}` : "Nova uplata"}
           </DialogTitle>
           <DialogDescription>
             {isEdit
-              ? `${item!.profile.name} · uredite iznos, datum ili status.`
+              ? `${item!.profile.name} · uredite iznos, datume ili bilješku.`
               : "Jedna mjesečna uplata za odabrani račun."}
           </DialogDescription>
         </DialogHeader>
@@ -188,13 +225,14 @@ export function InstanceDialog({
                   onChange={(e) => onBillChange(e.target.value)}
                 >
                   {model.profiles.map((p) => {
-                    const bills = model.bills.filter((b) => b.profileId === p._id);
+                    const bills = pickable.filter((b) => b.profileId === p._id);
                     if (!bills.length) return null;
                     return (
                       <optgroup key={p._id} label={p.name}>
                         {bills.map((b) => (
                           <option key={b._id} value={b._id}>
                             {b.name}
+                            {b.archivedAt ? " (arhiviran)" : ""}
                           </option>
                         ))}
                       </optgroup>
@@ -237,14 +275,76 @@ export function InstanceDialog({
                 id="inst-period"
                 value={period}
                 onChange={(v) => {
-                  setPeriod(v);
+                  changePeriod(v);
                   setPeriodTouched(true);
                 }}
                 invalid={!!errors.period}
               />
             </Field>
 
-            <Field label="Bilješka (nije obavezno)" htmlFor="inst-note">
+            <div
+              className={cn(
+                "flex flex-col gap-1.5 rounded-xl px-3.5 py-3",
+                isPaidNow ? "bg-lime-soft" : "bg-paper",
+              )}
+            >
+              <label htmlFor="inst-paid" className="text-sm font-semibold text-ink">
+                Datum plaćanja
+              </label>
+              <div className="flex gap-2">
+                <div className="min-w-0 flex-1">
+                  <DatePicker
+                    id="inst-paid"
+                    value={paidDate}
+                    onChange={changePaid}
+                    placeholder={showLegacyPaid ? "Plaćeno (bez datuma)" : "Nije plaćeno"}
+                  />
+                </div>
+                {paidDate ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="size-11 shrink-0 rounded-xl bg-card"
+                    aria-label="Ukloni datum plaćanja"
+                    onClick={() => changePaid("")}
+                  >
+                    <X aria-hidden />
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    className="h-11 shrink-0 rounded-xl bg-lime font-bold text-ink hover:bg-[#c6e85a]"
+                    onClick={() => changePaid(toISODate(new Date()))}
+                  >
+                    <Check strokeWidth={2.8} aria-hidden /> Danas
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {paidDate ? (
+                  `Plaćeno ${fullDate(parseISODate(paidDate))} Uklonite datum za povratak na neplaćeno.`
+                ) : showLegacyPaid ? (
+                  <>
+                    Označeno kao plaćeno, ali datum nije zabilježen.{" "}
+                    <button
+                      type="button"
+                      onClick={() => setPaidTouched(true)}
+                      className="font-semibold text-ink underline-offset-2 hover:underline"
+                    >
+                      Vrati na neplaćeno
+                    </button>
+                  </>
+                ) : (
+                  "Odaberite datum ili kliknite Danas."
+                )}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="inst-note" className="text-sm font-semibold text-ink">
+                Bilješka
+              </label>
               <textarea
                 id="inst-note"
                 className={textareaClass}
@@ -252,14 +352,20 @@ export function InstanceDialog({
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="npr. broj računa, poziv na broj…"
               />
-            </Field>
-
-            {isEdit && (
-              <label className="flex items-center justify-between gap-3 rounded-xl bg-paper px-3.5 py-3">
-                <span className="text-sm font-semibold">Plaćeno</span>
-                <Switch checked={isPaid} onCheckedChange={setIsPaid} />
-              </label>
-            )}
+              {generatedNote && note.trim() !== generatedNote ? (
+                <button
+                  type="button"
+                  onClick={() => setNote(generatedNote)}
+                  className="self-start text-left text-xs font-semibold text-ink underline-offset-2 hover:underline"
+                >
+                  {note.trim() ? "Zamijeni tekstom iz razdoblja" : "Popuni iz razdoblja"}
+                </button>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Popunjava se iz razdoblja računa.
+                </p>
+              )}
+            </div>
 
             <DialogFooter className="mt-2 flex-col-reverse gap-2 sm:flex-row sm:items-center">
               {isEdit && (

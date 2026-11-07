@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useReverification } from "@clerk/nextjs";
+import { useFreshVerification, useReverification } from "./Reverification";
 import { useMutation, useQuery } from "convex/react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
@@ -179,9 +179,11 @@ function DeleteAccountDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const wipeData = useMutation(api.profiles.deleteAllMyData);
+  const confirmIdentity = useFreshVerification();
   // Convex data goes first: once the Clerk user is gone the session can no
-  // longer authenticate to Convex. The wipe is idempotent, so a retry after
-  // Clerk's re-verification prompt is harmless.
+  // longer authenticate to Convex. That is why identity is confirmed before
+  // this runs (see onSubmit). Should Clerk still ask, the wipe is idempotent
+  // and the retry after the check is harmless.
   const deleteUser = useReverification(async () => {
     const res = await wipeData();
     if (!res.success) throw new Error(res.error || "Brisanje podataka nije uspjelo.");
@@ -208,6 +210,9 @@ function DeleteAccountDialog({
     setBusy(true);
     setError(null);
     try {
+      // Before anything is wiped: if Clerk asked only once user.delete() ran,
+      // backing out there would leave an account whose data is already gone.
+      await confirmIdentity();
       await deleteUser();
       toast.success("Račun je obrisan.");
       window.location.assign("/");

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { useReverification } from "@clerk/nextjs";
+import { useState, type ComponentProps, type FormEvent } from "react";
+import { useReverification } from "./Reverification";
 import { Check, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -26,13 +26,22 @@ import {
   reportError,
   type ClerkUser,
   type EmailAddress,
+  type ExternalAccount,
 } from "./shared";
+import { CODE_LENGTH, useCodeCheck } from "@/components/auth/OtpInput";
+
+type Removal =
+  | { email: EmailAddress; mode: "plain" }
+  | { email: EmailAddress; mode: "unlink"; account: ExternalAccount }
+  | { email: EmailAddress; mode: "blocked" };
 
 export function EmailAddresses({ user }: { user: ClerkUser }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [verifyTarget, setVerifyTarget] = useState<EmailAddress | null>(null);
-  // Kept after closing so the dialog text doesn't blank during its exit animation.
-  const [toRemove, setToRemove] = useState<EmailAddress | null>(null);
+  // Fixed when the dialog opens (and kept after closing so the text doesn't
+  // blank during the exit animation): reloading the user halfway through an
+  // unlink must not flip the dialog to another variant.
+  const [removal, setRemoval] = useState<Removal | null>(null);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -42,12 +51,33 @@ export function EmailAddresses({ user }: { user: ClerkUser }) {
   const destroyEmail = useReverification((email: EmailAddress) =>
     email.destroy(),
   );
+  const disconnectAccount = useReverification((account: ExternalAccount) =>
+    account.destroy(),
+  );
 
   const emails = [...user.emailAddresses].sort((a, b) => {
     if (a.id === user.primaryEmailAddressId) return -1;
     if (b.id === user.primaryEmailAddressId) return 1;
     return 0;
   });
+
+  // Clerk refuses to delete an address a connected (Google) account uses, so
+  // the dialog has to know about that link up front.
+  function askToRemove(email: EmailAddress) {
+    let next: Removal = { email, mode: "plain" };
+    if (email.linkedTo.length > 0) {
+      const account = user.externalAccounts.find((a) =>
+        email.linkedTo.some((link) => link.id === a.id),
+      );
+      // Without a password, unlinking Google could leave no way to sign in.
+      next =
+        account && user.passwordEnabled
+          ? { email, mode: "unlink", account }
+          : { email, mode: "blocked" };
+    }
+    setRemoval(next);
+    setRemoveOpen(true);
+  }
 
   function openAdd() {
     setVerifyTarget(null);
@@ -80,9 +110,9 @@ export function EmailAddresses({ user }: { user: ClerkUser }) {
   }
 
   async function remove() {
-    if (!toRemove) return true;
+    if (!removal) return true;
     try {
-      await destroyEmail(toRemove);
+      await destroyEmail(removal.email);
       await user.reload();
       toast.success("Adresa e-pošte je uklonjena.");
       return true;
@@ -90,6 +120,69 @@ export function EmailAddresses({ user }: { user: ClerkUser }) {
       reportError(err);
       return false;
     }
+  }
+
+  /** Unlinks the Google account that uses the address, then removes it. */
+  async function unlinkAndRemove() {
+    if (removal?.mode !== "unlink") return true;
+    const { email, account } = removal;
+    try {
+      await disconnectAccount(account);
+    } catch (err) {
+      reportError(err);
+      return false;
+    }
+    let left: EmailAddress | undefined;
+    try {
+      const fresh = await user.reload();
+      // Clerk may already have dropped the address together with the account.
+      left = fresh.emailAddresses.find((e) => e.id === email.id);
+      if (left) {
+        await destroyEmail(left);
+        await user.reload();
+      }
+      toast.success("Google je odspojen, a adresa e-pošte uklonjena.");
+      return true;
+    } catch {
+      // Google is already gone; the address is now a plain one, so a retry
+      // from the same dialog just removes it.
+      setRemoval({ email: left ?? email, mode: "plain" });
+      toast.error(
+        "Google je odspojen, ali adresu nismo uspjeli ukloniti. Pokušajte ponovno.",
+      );
+      void user.reload().catch(() => undefined);
+      return false;
+    }
+  }
+
+  let removeDialog: Pick<
+    ComponentProps<typeof ConfirmDialog>,
+    "title" | "description" | "confirmLabel" | "pendingLabel" | "onConfirm"
+  >;
+  const address = removal?.email.emailAddress ?? "";
+  if (!removal || removal.mode === "plain") {
+    removeDialog = {
+      title: "Ukloniti adresu e-pošte?",
+      description: `Adresa ${address} više se neće moći koristiti za prijavu.`,
+      confirmLabel: "Ukloni",
+      pendingLabel: "Uklanjanje…",
+      onConfirm: remove,
+    };
+  } else if (removal.mode === "unlink") {
+    removeDialog = {
+      title: "Odspojiti Google i ukloniti adresu?",
+      description: `Adresu ${address} koristi vaš povezani Google račun, pa se ne može ukloniti dok je Google povezan. Ako nastavite, odspojit ćemo Google i ukloniti adresu. Prijavljivat ćete se e-poštom i lozinkom.`,
+      confirmLabel: "Odspoji i ukloni",
+      pendingLabel: "Uklanjanje…",
+      onConfirm: unlinkAndRemove,
+    };
+  } else {
+    removeDialog = {
+      title: "Adresa je povezana s Googleom",
+      description: `Adresu ${address} koristi vaš povezani Google račun, pa se ne može ukloniti dok je Google povezan. Da biste odspojili Google, prvo pod „Prijava i sigurnost“ postavite lozinku – inače se ne biste imali kako prijaviti.`,
+      confirmLabel: "U redu",
+      pendingLabel: "",
+    };
   }
 
   return (
@@ -109,6 +202,13 @@ export function EmailAddresses({ user }: { user: ClerkUser }) {
                 {email.emailAddress}
               </span>
               {primary ? <Badge tone="ink">PRIMARNA</Badge> : null}
+              {email.linkedTo.length > 0 ? (
+                <Badge tone="soft">
+                  {email.linkedTo.some((l) => l.type === "oauth_google")
+                    ? "GOOGLE"
+                    : "POVEZANA"}
+                </Badge>
+              ) : null}
               {verified ? (
                 <span className="flex items-center gap-1 text-xs text-ink-2">
                   <Check
@@ -149,10 +249,7 @@ export function EmailAddresses({ user }: { user: ClerkUser }) {
                   <button
                     type="button"
                     className={btn.icon}
-                    onClick={() => {
-                      setToRemove(email);
-                      setRemoveOpen(true);
-                    }}
+                    onClick={() => askToRemove(email)}
                     disabled={busy}
                     aria-label={`Ukloni ${email.emailAddress}`}
                   >
@@ -194,12 +291,8 @@ export function EmailAddresses({ user }: { user: ClerkUser }) {
       <ConfirmDialog
         open={removeOpen}
         onOpenChange={setRemoveOpen}
-        title="Ukloniti adresu e-pošte?"
-        description={`Adresa ${toRemove?.emailAddress ?? ""} više se neće moći koristiti za prijavu.`}
-        confirmLabel="Ukloni"
-        pendingLabel="Uklanjanje…"
         destructive
-        onConfirm={remove}
+        {...removeDialog}
       />
     </div>
   );
@@ -223,6 +316,7 @@ function EmailDialogBody({
   const [busy, setBusy] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const codeCheck = useCodeCheck();
 
   async function submitEmail(e: FormEvent) {
     e.preventDefault();
@@ -239,25 +333,31 @@ function EmailDialogBody({
     }
   }
 
-  async function submitCode(e: FormEvent) {
-    e.preventDefault();
+  function verify(entered: string) {
     if (!pendingEmail) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await pendingEmail.attemptVerification({ code: code.trim() });
-      if (res.verification.status !== "verified") {
-        setError("Potvrda nije uspjela. Zatražite novi kod.");
-        return;
+    void codeCheck.run(async () => {
+      setError(null);
+      try {
+        const res = await pendingEmail.attemptVerification({ code: entered });
+        if (res.verification.status !== "verified") {
+          setCode("");
+          setError("Potvrda nije uspjela. Zatražite novi kod.");
+          return;
+        }
+        await user.reload();
+        toast.success("Adresa e-pošte je potvrđena.");
+        onClose();
+      } catch (err) {
+        setCode("");
+        setError(errorText(err));
       }
-      await user.reload();
-      toast.success("Adresa e-pošte je potvrđena.");
-      onClose();
-    } catch (err) {
-      setError(errorText(err));
-    } finally {
-      setBusy(false);
-    }
+    });
+  }
+
+  // Enter in the code field; normally the last digit already started the check.
+  function submitCode(e: FormEvent) {
+    e.preventDefault();
+    if (code.length === CODE_LENGTH) verify(code);
   }
 
   async function resend() {
@@ -266,6 +366,7 @@ function EmailDialogBody({
     setError(null);
     try {
       await pendingEmail.prepareVerification({ strategy: "email_code" });
+      setCode("");
       toast.success("Novi kod je poslan.");
     } catch (err) {
       setError(errorText(err));
@@ -328,13 +429,20 @@ function EmailDialogBody({
         id="email-code"
         label="Kod iz e-pošte"
         value={code}
-        onChange={setCode}
+        onChange={(next) => {
+          setCode(next);
+          if (error) setError(null);
+        }}
+        onComplete={verify}
+        checking={codeCheck.checking}
+        errorId={error ? "email-code-error" : undefined}
+        inputRef={codeCheck.inputRef}
       />
-      <InlineError message={error} />
+      <InlineError id="email-code-error" message={error} />
       <button
         type="button"
         onClick={resend}
-        disabled={resending}
+        disabled={resending || codeCheck.checking}
         className="self-start text-[13px] font-semibold text-ink underline-offset-4 hover:underline disabled:opacity-50"
       >
         {resending ? "Slanje…" : "Pošalji kod ponovno"}
@@ -342,10 +450,6 @@ function EmailDialogBody({
       <DialogFooter className="gap-2">
         <button type="button" className={btn.ghost} onClick={onClose}>
           Odustani
-        </button>
-        <button type="submit" className={btn.primary} disabled={busy}>
-          {busy ? <Spinner /> : null}
-          Potvrdi
         </button>
       </DialogFooter>
     </form>

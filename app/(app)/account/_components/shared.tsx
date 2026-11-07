@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import { CodeStatus, OtpInput } from "@/components/auth/OtpInput";
 import {
   clerkErrorMessage,
   isReverificationCancelled,
@@ -165,40 +166,64 @@ export function TextInput({
   return <Input {...props} className={cn(inputClass, className)} />;
 }
 
+/**
+ * Six-digit code field that hands the code to `onComplete` as soon as the
+ * last digit is typed or pasted – there is no confirm button to press.
+ */
 export function CodeField({
   id,
   label,
   value,
   onChange,
+  onComplete,
+  checking,
+  errorId,
+  inputRef,
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onComplete: (code: string) => void;
+  /** The code is being verified: locks the field and shows a spinner. */
+  checking: boolean;
+  /** Id of the error shown for this field, if one is showing right now. */
+  errorId?: string;
+  inputRef?: React.Ref<HTMLInputElement>;
 }) {
   return (
-    <Field id={id} label={label}>
-      <TextInput
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-[13px] font-semibold text-ink">
+        {label}
+      </label>
+      <OtpInput
+        ref={inputRef}
         id={id}
         name="code"
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        pattern="[0-9]*"
-        maxLength={6}
-        required
         autoFocus
         value={value}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
-        className="font-mono text-lg tracking-[0.35em] md:text-lg"
+        onChange={onChange}
+        onComplete={onComplete}
+        disabled={checking}
+        invalid={errorId !== undefined}
+        aria-describedby={errorId ? `${errorId} ${id}-status` : `${id}-status`}
       />
-    </Field>
+      <CodeStatus id={`${id}-status`} checking={checking} />
+    </div>
   );
 }
 
-export function InlineError({ message }: { message: string | null }) {
+export function InlineError({
+  id,
+  message,
+}: {
+  id?: string;
+  message: string | null;
+}) {
   if (!message) return null;
   return (
     <p
+      id={id}
       role="alert"
       className="rounded-xl border border-late-border bg-late-bg px-3.5 py-2.5 text-sm font-medium text-late-strong"
     >
@@ -290,12 +315,43 @@ export function ConfirmDialog({
   confirmLabel: string;
   pendingLabel: string;
   destructive?: boolean;
-  /** Resolve to true to close the dialog. */
-  onConfirm: () => Promise<boolean>;
+  /**
+   * Resolve to true to close the dialog. Leave it out for a notice that only
+   * needs acknowledging: the dialog then shows a single button.
+   */
+  onConfirm?: () => Promise<boolean>;
 }) {
   const [pending, setPending] = React.useState(false);
 
+  if (!onConfirm) {
+    return (
+      <AlertDialog open={open} onOpenChange={onOpenChange}>
+        <AlertDialogContent className={dialogClass}>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display text-xl font-bold text-ink">
+              {title}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              {description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-2 gap-2">
+            <AlertDialogCancel
+              className={cn(
+                btn.primary,
+                "border-0 shadow-none hover:text-white",
+              )}
+            >
+              {confirmLabel}
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
   async function confirm() {
+    if (!onConfirm) return;
     setPending(true);
     try {
       const done = await onConfirm();

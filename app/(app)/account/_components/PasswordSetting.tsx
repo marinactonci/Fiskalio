@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useReverification } from "@clerk/nextjs";
+import { useReverification } from "./Reverification";
 import { toast } from "sonner";
 import {
   Dialog,

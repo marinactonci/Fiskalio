@@ -231,16 +231,24 @@ function Dashboard({ model }: { model: Model }) {
                 </span>
                 <span className="font-mono text-xs text-muted-foreground">{formatMoney(sum(g.items))}</span>
               </div>
-              {groupedByMonth(g.items).map((month) => (
-                <div key={month.key}>
-                  <div className="px-5 pt-2.5 pb-1 text-xs font-semibold text-muted-foreground capitalize">{month.label}</div>
-                  <ul>
-                    {month.items.map((i) => (
-                      <OpenRow key={i._id} item={i} today={today} onEdit={() => openInstance({ item: i })} />
-                    ))}
-                  </ul>
-                </div>
-              ))}
+              {g.tone === "late" && new Set(g.items.map((i) => i.dueMonth)).size > 1 ? (
+                groupedByMonth(g.items).map((month) => (
+                  <div key={month.key}>
+                    <div className="px-5 pt-2.5 pb-1 text-xs font-semibold text-muted-foreground capitalize">{month.label}</div>
+                    <ul>
+                      {month.items.map((i) => (
+                        <OpenRow key={i._id} item={i} today={today} onEdit={() => openInstance({ item: i })} />
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              ) : (
+                <ul>
+                  {g.items.map((i) => (
+                    <OpenRow key={i._id} item={i} today={today} onEdit={() => openInstance({ item: i })} />
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
           {paidThisMonth.length > 0 && (

@@ -108,7 +108,7 @@ function Bills({ model }: { model: Model }) {
   const drawerBill = selectedBill ? model.billById.get(selectedBill) : undefined;
 
   return (
-    <div className="mx-auto flex max-w-[1440px] flex-col gap-5">
+    <div className="mx-auto flex max-w-360 flex-col gap-5">
       <PageHeader
         title="Računi"
         eyebrow={
@@ -162,8 +162,8 @@ function Bills({ model }: { model: Model }) {
                 id={`profil-${p._id}`}
                 className={cn("scroll-mt-20 overflow-hidden", focusProfile === p._id && "ring-2 ring-ink")}
               >
-                <div className="flex flex-wrap items-center gap-3 border-b border-line-soft px-[18px] py-3.5">
-                  <span className="size-3 rounded-[4px]" style={{ backgroundColor: p.color }} aria-hidden />
+                <div className="flex flex-wrap items-center gap-3 border-b border-line-soft px-4.5 py-3.5">
+                  <span className="size-3 rounded-lg" style={{ backgroundColor: p.color }} aria-hidden />
                   <h2 className="text-base font-bold">{p.name}</h2>
                   {(p.address.city || p.address.street) && (
                     <span className="text-[13px] text-muted-foreground">
@@ -186,7 +186,7 @@ function Bills({ model }: { model: Model }) {
                   </DropdownMenu>
                 </div>
                 {bills.length === 0 ? (
-                  <div className="flex flex-wrap items-center justify-between gap-3 px-[18px] py-4 text-sm text-ink-2">
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-4.5 py-4 text-sm text-ink-2">
                     {archived.length ? "Ovaj profil nema aktivnih računa." : "Ovaj profil još nema računa."}
                     <Button size="sm" variant="outline" onClick={() => openBill({ profileId: p._id })}>
                       <Plus aria-hidden /> Dodaj račun
@@ -208,7 +208,7 @@ function Bills({ model }: { model: Model }) {
                             onClick={() => setBill(b._id)}
                             aria-current={selected ? "true" : undefined}
                             className={cn(
-                              "flex w-full flex-wrap items-center gap-4 px-[18px] py-3 text-left",
+                              "flex w-full flex-wrap items-center gap-4 px-4.5 py-3 text-left",
                               selected ? "bg-lime-soft shadow-[inset_3px_0_0_var(--ink)]" : "hover:bg-[#FAFAF7]",
                             )}
                           >
@@ -219,19 +219,19 @@ function Bills({ model }: { model: Model }) {
                                 {b.hasEBill ? " · e-račun" : ""}
                               </span>
                             </span>
-                            <span className="flex h-[26px] w-[66px] items-end gap-[3px]" aria-hidden>
+                            <span className="flex h-6.5 w-16.5 items-end gap-0.75" aria-hidden>
                               {last6.map((i, k) => (
                                 <span
                                   key={i._id}
-                                  className={cn("min-h-[2px] flex-1 rounded-t-[2px]", k === last6.length - 1 ? "bg-ink" : "bg-[#B9BCC4]")}
+                                  className={cn("min-h-0.5 flex-1 rounded-t-[2px]", k === last6.length - 1 ? "bg-ink" : "bg-[#B9BCC4]")}
                                   style={{ height: `${(i.amount / max) * 100}%` }}
                                 />
                               ))}
                             </span>
-                            <span className="w-[88px] text-right font-mono font-semibold">
+                            <span className="w-22 text-right font-mono font-semibold">
                               {last ? formatMoney(last.amount) : "—"}
                             </span>
-                            <span className="flex w-[92px] justify-end">
+                            <span className="flex w-23 justify-end">
                               {cur ? (
                                 <StatusPill status={cur.status} />
                               ) : (
@@ -250,7 +250,7 @@ function Bills({ model }: { model: Model }) {
                       type="button"
                       aria-expanded={archiveOpen}
                       onClick={() => toggleArchive(p._id)}
-                      className="flex w-full items-center gap-2.5 px-[18px] py-3 text-left text-sm font-semibold text-ink-2"
+                      className="flex w-full items-center gap-2.5 px-4.5 py-3 text-left text-sm font-semibold text-ink-2"
                     >
                       <ChevronDown className={cn("size-4 transition", !archiveOpen && "-rotate-90")} aria-hidden />
                       <Archive className="size-4" aria-hidden />
@@ -266,7 +266,7 @@ function Bills({ model }: { model: Model }) {
                             <li
                               key={b._id}
                               className={cn(
-                                "flex items-center gap-3 border-t border-line-soft pr-[18px]",
+                                "flex items-center gap-3 border-t border-line-soft pr-4.5",
                                 selected && "bg-lime-soft shadow-[inset_3px_0_0_var(--ink)]",
                               )}
                             >
@@ -274,7 +274,7 @@ function Bills({ model }: { model: Model }) {
                                 type="button"
                                 onClick={() => setBill(b._id)}
                                 aria-current={selected ? "true" : undefined}
-                                className="flex min-w-0 flex-1 flex-wrap items-center gap-4 py-3 pl-[18px] text-left"
+                                className="flex min-w-0 flex-1 flex-wrap items-center gap-4 py-3 pl-4.5 text-left"
                               >
                                 <span className="min-w-0 flex-[1_1_170px]">
                                   <span className="block truncate text-[15px] font-semibold text-ink-2">{b.name}</span>
@@ -283,7 +283,7 @@ function Bills({ model }: { model: Model }) {
                                     {plural(h.length, "uplata", "uplate", "uplata")} u povijesti
                                   </span>
                                 </span>
-                                <span className="w-[88px] text-right font-mono font-semibold text-ink-2">
+                                <span className="w-22 text-right font-mono font-semibold text-ink-2">
                                   {last ? formatMoney(last.amount) : "—"}
                                 </span>
                               </button>

@@ -92,19 +92,19 @@ export function ProfileSection({ user }: { user: ClerkUser }) {
 
   return (
     <SettingsCard id="osobno" title="Osobni podaci">
-      <div className="mt-[18px] flex flex-wrap items-center gap-4">
+      <div className="mt-4.5 flex flex-wrap items-center gap-4">
         {user.hasImage ? (
           // Clerk's image CDN isn't configured for next/image; a plain img is fine here.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={user.imageUrl}
             alt="Profilna fotografija"
-            className="size-[72px] rounded-full object-cover"
+            className="size-18 rounded-full object-cover"
           />
         ) : (
           <span
             aria-hidden="true"
-            className="grid size-[72px] place-items-center rounded-full bg-lime font-display text-[26px] font-extrabold text-ink"
+            className="grid size-18 place-items-center rounded-full bg-lime font-display text-[26px] font-extrabold text-ink"
           >
             {userInitials(user)}
           </span>

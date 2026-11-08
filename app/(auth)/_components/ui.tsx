@@ -107,7 +107,7 @@ export function GoogleButton({
       className="mt-5 flex h-12 w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-input bg-white text-[15px] font-semibold text-ink outline-none transition-colors hover:bg-line-soft focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? (
-        <Loader2 className="size-[18px] animate-spin" aria-hidden="true" />
+        <Loader2 className="size-4.5 animate-spin" aria-hidden="true" />
       ) : (
         <GoogleIcon />
       )}
@@ -118,7 +118,7 @@ export function GoogleButton({
 
 export function OrDivider() {
   return (
-    <div className="my-[22px] flex items-center gap-3 text-[13px] text-muted-foreground">
+    <div className="my-5.5 flex items-center gap-3 text-[13px] text-muted-foreground">
       <span className="h-px flex-1 bg-input" aria-hidden="true" />
       ili e-poštom
       <span className="h-px flex-1 bg-input" aria-hidden="true" />
@@ -198,11 +198,11 @@ export function SubmitButton({
     <button
       type="submit"
       disabled={disabled || pending}
-      className="mt-1.5 flex h-[50px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ink text-base font-semibold text-white outline-none transition-colors hover:bg-ink-2 focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
+      className="mt-1.5 flex h-12.5 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ink text-base font-semibold text-white outline-none transition-colors hover:bg-ink-2 focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? (
         <>
-          <Loader2 className="size-[18px] animate-spin" aria-hidden="true" />
+          <Loader2 className="size-4.5 animate-spin" aria-hidden="true" />
           {pendingLabel}
         </>
       ) : (

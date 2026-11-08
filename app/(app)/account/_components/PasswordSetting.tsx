@@ -172,7 +172,7 @@ function PasswordForm({
           type="checkbox"
           checked={signOutOthers}
           onChange={(e) => setSignOutOthers(e.target.checked)}
-          className="mt-0.5 size-[18px] shrink-0 accent-ink"
+          className="mt-0.5 size-4.5 shrink-0 accent-ink"
         />
         Odjavi me sa svih ostalih uređaja
       </label>

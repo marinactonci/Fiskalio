@@ -119,7 +119,7 @@ export function DataSection({ user }: { user: ClerkUser }) {
 
   return (
     <SettingsCard id="podaci" title="Podaci i privatnost">
-      <div className="mt-3.5 flex flex-wrap items-center gap-3.5 border-b border-line-soft pb-[18px]">
+      <div className="mt-3.5 flex flex-wrap items-center gap-3.5 border-b border-line-soft pb-4.5">
         <div className="min-w-0 flex-[1_1_240px]">
           <p className="font-semibold text-ink">Izvoz podataka</p>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
@@ -141,7 +141,7 @@ export function DataSection({ user }: { user: ClerkUser }) {
         </button>
       </div>
 
-      <div className="mt-[18px] flex flex-wrap items-center gap-3.5 rounded-xl border-[1.5px] border-late-border bg-late-bg/50 p-[18px]">
+      <div className="mt-4.5 flex flex-wrap items-center gap-3.5 rounded-xl border-[1.5px] border-late-border bg-late-bg/50 p-4.5">
         <div className="min-w-0 flex-[1_1_240px]">
           <p className="font-bold text-late-strong">Obriši račun</p>
           <p className="mt-0.5 text-[13px] text-late-strong/90">

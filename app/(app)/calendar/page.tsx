@@ -156,7 +156,7 @@ function CalendarView({ model }: { model: Model }) {
 
   if (model.profiles.length === 0) {
     return (
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-5">
+      <div className="mx-auto flex max-w-360 flex-col gap-5">
         <PageHeader title="Kalendar" />
         <EmptyState
           title="Kalendar je još prazan"
@@ -172,7 +172,7 @@ function CalendarView({ model }: { model: Model }) {
   const selectedItems = selectedDay ? byDate.get(selectedDay) ?? [] : [];
 
   return (
-    <div className="mx-auto flex max-w-[1440px] flex-col gap-4">
+    <div className="mx-auto flex max-w-360 flex-col gap-4">
       <PageHeader
         title={
           <span className="flex flex-wrap items-center gap-3">
@@ -241,7 +241,7 @@ function CalendarView({ model }: { model: Model }) {
                     <div
                       key={iso}
                       className={cn(
-                        "group relative flex min-h-[64px] min-w-0 flex-col gap-1 border-r border-b border-line-soft p-1 md:min-h-[118px] md:p-1.5",
+                        "group relative flex min-h-16 min-w-0 flex-col gap-1 border-r border-b border-line-soft p-1 md:min-h-29.5 md:p-1.5",
                         !inMonth ? "bg-[#F4F4EF]" : weekend ? "bg-[#FAFAF7]" : "bg-card",
                         (idx + 1) % 7 === 0 && "border-r-0",
                       )}
@@ -334,16 +334,16 @@ function CalendarView({ model }: { model: Model }) {
           )}
 
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5"><span className="h-3 w-[18px] rounded-[3px] border border-line border-l-[3px] border-l-ink-2 bg-card" />Čeka</span>
-            <span className="flex items-center gap-1.5"><span className="h-3 w-[18px] rounded-[3px] border-l-[3px] border-l-ink-2 bg-late-bg" />Kasni</span>
-            <span className="flex items-center gap-1.5"><span className="h-3 w-[18px] rounded-[3px] border-l-[3px] border-l-ink-2 bg-paid-bg" />Plaćeno</span>
+            <span className="flex items-center gap-1.5"><span className="h-3 w-4.5 rounded-[3px] border border-line border-l-[3px] border-l-ink-2 bg-card" />Čeka</span>
+            <span className="flex items-center gap-1.5"><span className="h-3 w-4.5 rounded-[3px] border-l-[3px] border-l-ink-2 bg-late-bg" />Kasni</span>
+            <span className="flex items-center gap-1.5"><span className="h-3 w-4.5 rounded-[3px] border-l-[3px] border-l-ink-2 bg-paid-bg" />Plaćeno</span>
             <span>Lijevi rub = boja profila · klik na uplatu otvara uređivanje</span>
           </div>
         </div>
 
         {/* Stats rail */}
         <aside aria-label="Statistika odabira" className="flex min-w-0 flex-[1_1_340px] flex-col gap-3.5">
-          <section className="rounded-2xl bg-ink p-[18px] text-white">
+          <section className="rounded-2xl bg-ink p-4.5 text-white">
             <p className="text-[13px] text-[#B9BCC4]">Zbroj odabranog</p>
             <p className="mt-1.5 font-mono text-[30px] font-semibold tracking-tight">{formatMoney(t.total)}</p>
             <p className="mt-1 text-[13px] text-[#B9BCC4]">
@@ -362,10 +362,10 @@ function CalendarView({ model }: { model: Model }) {
             </dl>
           </section>
 
-          <Card className="p-[18px]">
+          <Card className="p-4.5">
             <h2 className="text-sm font-bold">Kad treba novac</h2>
             <p className="mt-0.5 mb-3 text-xs text-muted-foreground">Zbroj dospijeća po tjednima</p>
-            <div className="flex h-[110px] items-end gap-2">
+            <div className="flex h-27.5 items-end gap-2">
               {weekSums.map((w) => (
                 <div key={w.label} className="flex h-full flex-1 flex-col items-center justify-end gap-1" title={`${w.label}: ${formatMoney(w.v)}`}>
                   <span className="font-mono text-[10px] text-ink-2">{w.v > 0 ? Math.round(w.v) : ""}</span>
@@ -384,7 +384,7 @@ function CalendarView({ model }: { model: Model }) {
           </Card>
 
           {profiles.length > 0 && (
-            <Card className="p-[18px]">
+            <Card className="p-4.5">
               <h2 className="mb-3 text-sm font-bold">Po profilu</h2>
               <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-paper">
                 {profiles.map((p) => (
@@ -397,7 +397,7 @@ function CalendarView({ model }: { model: Model }) {
                     <span className="size-2.5 rounded-[3px]" style={{ backgroundColor: p.profile.color }} aria-hidden />
                     <span className="truncate">{p.profile.name}</span>
                     <span className="ml-auto text-xs text-muted-foreground">{Math.round(p.pct)} %</span>
-                    <span className="w-[84px] text-right font-mono font-semibold">{formatMoney(p.value)}</span>
+                    <span className="w-21 text-right font-mono font-semibold">{formatMoney(p.value)}</span>
                   </div>
                 ))}
               </div>
@@ -405,7 +405,7 @@ function CalendarView({ model }: { model: Model }) {
           )}
 
           {topBills.length > 0 && (
-            <Card className="p-[18px]">
+            <Card className="p-4.5">
               <h2 className="mb-3 text-sm font-bold">Najveći računi u odabiru</h2>
               <div className="flex flex-col gap-2.5">
                 {topBills.map((i) => {
@@ -425,7 +425,7 @@ function CalendarView({ model }: { model: Model }) {
                         )}
                         <span className="ml-auto font-mono font-semibold">{formatMoney(i.amount)}</span>
                       </div>
-                      <div className="h-[5px] rounded-full bg-paper">
+                      <div className="h-1.25 rounded-full bg-paper">
                         <div className="h-full rounded-full bg-ink" style={{ width: `${(i.amount / maxBill) * 100}%` }} />
                       </div>
                     </div>
@@ -464,14 +464,14 @@ function ListView({ items, onOpen }: { items: Item[]; onOpen: (i: Item) => void 
               onClick={() => onOpen(i)}
               className="flex w-full flex-wrap items-center gap-3.5 px-4 py-3 text-left hover:bg-[#FAFAF7]"
             >
-              <span className="w-[86px] font-mono text-[13px] text-muted-foreground">{shortDate(i.due)}</span>
+              <span className="w-21.5 font-mono text-[13px] text-muted-foreground">{shortDate(i.due)}</span>
               <span className="h-7 w-1 rounded-sm" style={{ backgroundColor: i.profile.color }} aria-hidden />
               <span className="min-w-0 flex-[1_1_150px]">
                 <span className="block truncate font-semibold">{i.bill.name}</span>
                 <span className="text-xs text-muted-foreground">{i.profile.name}</span>
               </span>
               <StatusPill status={i.status} />
-              <span className="w-[86px] text-right font-mono font-semibold">{formatMoney(i.amount)}</span>
+              <span className="w-21.5 text-right font-mono font-semibold">{formatMoney(i.amount)}</span>
             </button>
           </li>
         ))}

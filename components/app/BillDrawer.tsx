@@ -42,7 +42,7 @@ export function BillDrawer({
 }) {
   return (
     <Sheet open={!!bill} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="w-full gap-0 overflow-y-auto bg-card p-0 sm:max-w-[440px]">
+      <SheetContent side="right" className="w-full gap-0 overflow-y-auto bg-card p-0 sm:max-w-110">
         {bill && <DrawerBody key={bill._id} model={model} bill={bill} history={history} />}
       </SheetContent>
     </Sheet>
@@ -113,7 +113,7 @@ function DrawerBody({ model, bill, history }: { model: Model; bill: OBill; histo
       )}
 
       {current ? (
-        <div className="rounded-2xl bg-ink p-[18px] text-white">
+        <div className="rounded-2xl bg-ink p-4.5 text-white">
           <div className="flex items-baseline justify-between gap-2.5">
             <span className="font-mono text-xs text-[#B9BCC4] uppercase">
               {current.period ? monthLabel(current.period) : monthLabel(current.due)}
@@ -172,13 +172,13 @@ function DrawerBody({ model, bill, history }: { model: Model; bill: OBill; histo
             <h3 className="text-sm font-bold">Zadnjih {last12.length} uplata</h3>
             <span className="text-xs text-muted-foreground">prosjek {formatMoney(avg)}</span>
           </div>
-          <div className="mt-2.5 flex h-[92px] items-end gap-[5px] border-b border-input">
+          <div className="mt-2.5 flex h-23 items-end gap-1.25 border-b border-input">
             {last12.map((i) => (
               <span
                 key={i._id}
                 title={`${monthShortLabel(i.due)} · ${formatMoney(i.amount)}`}
                 className={cn(
-                  "flex-1 rounded-t-[4px]",
+                  "flex-1 rounded-t-lg",
                   i === current && i.status !== "paid" ? "border-[1.5px] border-b-0 border-dashed border-ink bg-card" : "bg-ink",
                 )}
                 style={{ height: `${Math.max(3, (i.amount / max) * 100)}%` }}
@@ -214,7 +214,7 @@ function DrawerBody({ model, bill, history }: { model: Model; bill: OBill; histo
                   onClick={() => openInstance({ item: i })}
                   className="flex w-full items-center gap-3 border-b border-paper py-2.5 text-left hover:bg-[#FAFAF7]"
                 >
-                  <span className="w-[74px] font-mono text-[13px]">
+                  <span className="w-18.5 font-mono text-[13px]">
                     {i.period ? monthShortLabel(i.period) : monthShortLabel(i.due)}
                   </span>
                   <span className="flex flex-1 items-center gap-1.5 text-xs text-muted-foreground">
@@ -224,7 +224,7 @@ function DrawerBody({ model, bill, history }: { model: Model; bill: OBill; histo
                     {i.isEstimated && i.status !== "paid" && <EstimatedChip />}
                   </span>
                   <span className="font-mono font-semibold">{formatMoney(i.amount)}</span>
-                  <span className="flex w-[70px] justify-end">
+                  <span className="flex w-17.5 justify-end">
                     <StatusPill status={i.status} className="text-[11px]" />
                   </span>
                 </button>
@@ -303,7 +303,7 @@ function EBillCard({ billId }: { billId: string }) {
     <div className="rounded-2xl border border-line px-4 py-1">
       {eBill.link && (
         <div className="flex items-center gap-2.5 border-b border-line-soft py-3">
-          <span className="w-[84px] text-[13px] text-muted-foreground">Portal</span>
+          <span className="w-21 text-[13px] text-muted-foreground">Portal</span>
           <a
             href={eBill.link}
             target="_blank"
@@ -317,7 +317,7 @@ function EBillCard({ billId }: { billId: string }) {
       )}
       {username && (
         <div className="flex items-center gap-2.5 border-b border-line-soft py-2">
-          <span className="w-[84px] text-[13px] text-muted-foreground">Korisnik</span>
+          <span className="w-21 text-[13px] text-muted-foreground">Korisnik</span>
           <span className="min-w-0 flex-1 truncate font-mono">{username}</span>
           <button
             type="button"
@@ -331,7 +331,7 @@ function EBillCard({ billId }: { billId: string }) {
       )}
       {password && (
         <div className="flex items-center gap-2.5 py-2">
-          <span className="w-[84px] text-[13px] text-muted-foreground">Lozinka</span>
+          <span className="w-21 text-[13px] text-muted-foreground">Lozinka</span>
           <span className="min-w-0 flex-1 truncate font-mono tracking-wider">{reveal ? password : "••••••••••"}</span>
           <button
             type="button"

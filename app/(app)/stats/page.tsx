@@ -114,7 +114,7 @@ function Stats({ model }: { model: Model }) {
 
   if (model.profiles.length === 0) {
     return (
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-5">
+      <div className="mx-auto flex max-w-360 flex-col gap-5">
         <PageHeader title="Statistika" />
         <EmptyState title="Još nema podataka" action={<Button onClick={() => openProfile()}>Dodaj prvi profil</Button>}>
           Statistika se puni sama kako budete označavali uplate.
@@ -145,7 +145,7 @@ function Stats({ model }: { model: Model }) {
   };
 
   return (
-    <div className="mx-auto flex max-w-[1440px] flex-col gap-4">
+    <div className="mx-auto flex max-w-360 flex-col gap-4">
       <PageHeader eyebrow={`${monthLabel(months[0])} – ${monthLabel(months[months.length - 1])}`} title="Statistika">
         <Button variant="outline" onClick={() => setShowTable((s) => !s)} aria-pressed={showTable}>
           {showTable ? "Sakrij tablicu" : "Prikaži kao tablicu"}
@@ -178,7 +178,7 @@ function Stats({ model }: { model: Model }) {
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-ink p-5 text-white">
           <p className="text-[13px] text-[#B9BCC4]">Ukupno u razdoblju</p>
           <p className="mt-2 font-mono text-[28px] font-semibold tracking-tight">{formatMoney(total)}</p>
@@ -239,14 +239,14 @@ function Stats({ model }: { model: Model }) {
             </ul>
           </div>
           <div className="mt-5 flex gap-2.5">
-            <div className="flex h-[240px] w-11 flex-col justify-between text-right font-mono text-[11px] text-muted-foreground" aria-hidden>
+            <div className="flex h-60 w-11 flex-col justify-between text-right font-mono text-[11px] text-muted-foreground" aria-hidden>
               {ticks.map((t, k) => (
                 <span key={k} className={cn(k === 0 && "-translate-y-1.5", k === ticks.length - 1 && "translate-y-1.5")}>
                   {t}
                 </span>
               ))}
             </div>
-            <div className="relative h-[240px] min-w-0 flex-1">
+            <div className="relative h-60 min-w-0 flex-1">
               <div className="absolute inset-0 flex flex-col justify-between" aria-hidden>
                 {ticks.map((_, k) => (
                   <span key={k} className={cn("border-t", k === ticks.length - 1 ? "border-input" : "border-line-soft")} />
@@ -263,7 +263,7 @@ function Stats({ model }: { model: Model }) {
                   return (
                     <div
                       key={k}
-                      className="relative flex min-w-0 flex-1 flex-col justify-end gap-[2px]"
+                      className="relative flex min-w-0 flex-1 flex-col justify-end gap-0.5"
                       style={{ height: `${(perMonth[idx] / yMax) * 100}%` }}
                       title={`${monthLabel(m)} · ukupno ${formatMoney(perMonth[idx])}`}
                     >
@@ -278,7 +278,7 @@ function Stats({ model }: { model: Model }) {
                           <div
                             key={s.p._id}
                             title={`${monthLabel(m)} · ${s.p.name} · ${formatMoney(s.v)}`}
-                            className={cn("min-h-[2px] hover:brightness-110", si === 0 && "rounded-t-[4px]")}
+                            className={cn("min-h-0.5 hover:brightness-110", si === 0 && "rounded-t-lg")}
                             style={{ flexGrow: s.v, backgroundColor: s.p.color }}
                           />
                         ))}
@@ -288,7 +288,7 @@ function Stats({ model }: { model: Model }) {
               </div>
             </div>
           </div>
-          <div className="mt-2 ml-[54px] flex gap-[clamp(4px,1.2vw,14px)]">
+          <div className="mt-2 ml-13.5 flex gap-[clamp(4px,1.2vw,14px)]">
             {months.map((m, idx) => (
               <span
                 key={monthKeys[idx]}
@@ -304,7 +304,7 @@ function Stats({ model }: { model: Model }) {
 
           {showTable && (
             <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[480px] text-left text-sm">
+              <table className="w-full min-w-120 text-left text-sm">
                 <caption className="sr-only">Mjesečni trošak po profilu</caption>
                 <thead>
                   <tr className="border-b border-line text-xs text-muted-foreground">
@@ -346,7 +346,7 @@ function Stats({ model }: { model: Model }) {
               <div key={k} className={cn("flex gap-3 py-3", k < insights.length - 1 && "border-b border-line-soft")}>
                 <span
                   className={cn(
-                    "grid size-[34px] shrink-0 place-items-center rounded-lg",
+                    "grid size-8.5 shrink-0 place-items-center rounded-lg",
                     ins.icon === "late" ? "bg-late-bg text-late" : "bg-paper",
                   )}
                 >
@@ -437,7 +437,7 @@ function Stats({ model }: { model: Model }) {
                       {vals.map((v, k) => {
                         const label = `${b.name} · ${monthLabel(months[k])}`;
                         if (!v.length) {
-                          return <span key={k} className="h-[30px] rounded-[5px] bg-[#F7F7F3]" title={`${label} · nema uplate`} />;
+                          return <span key={k} className="h-7.5 rounded-[5px] bg-[#F7F7F3]" title={`${label} · nema uplate`} />;
                         }
                         const val = sums[k];
                         const step =
@@ -458,13 +458,13 @@ function Stats({ model }: { model: Model }) {
                             title={`${label} · ${formatMoney(val)}${unpaid ? " · čeka" : ""}${late ? " · kasni" : ""}`}
                             aria-label={`${label}: ${formatMoney(val)}${unpaid ? ", čeka plaćanje" : ""}${late ? ", kasni" : ""}`}
                             className={cn(
-                              "relative h-[30px] rounded-[5px] hover:outline-2 hover:outline-offset-1 hover:outline-ink",
+                              "relative h-7.5 rounded-[5px] hover:outline-2 hover:outline-offset-1 hover:outline-ink",
                               unpaid && "border-[1.5px] border-dashed border-[#9399A6] bg-card",
                             )}
                             style={unpaid ? undefined : { backgroundColor: RAMP[step] }}
                           >
                             {late && (
-                              <span className="absolute top-[3px] right-[3px] size-2 rounded-full bg-[#E2620F] shadow-[0_0_0_2px_#fff]" />
+                              <span className="absolute top-0.75 right-0.75 size-2 rounded-full bg-[#E2620F] shadow-[0_0_0_2px_#fff]" />
                             )}
                           </button>
                         );
@@ -489,13 +489,13 @@ function Stats({ model }: { model: Model }) {
             niže
             <span className="flex gap-0.5" aria-hidden>
               {RAMP.map((c) => (
-                <span key={c} className="h-3 w-[18px] rounded-[3px]" style={{ backgroundColor: c }} />
+                <span key={c} className="h-3 w-4.5 rounded-[3px]" style={{ backgroundColor: c }} />
               ))}
             </span>
             više {scale === "row" ? "(za taj račun)" : "(svi računi)"}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-[18px] rounded-[3px] border-[1.5px] border-dashed border-[#9399A6]" aria-hidden />
+            <span className="h-3 w-4.5 rounded-[3px] border-[1.5px] border-dashed border-[#9399A6]" aria-hidden />
             čeka plaćanje
           </span>
           <span className="flex items-center gap-1.5">

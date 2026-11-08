@@ -32,11 +32,11 @@ export function MonthPreview() {
       aria-hidden="true"
       className="hidden min-w-0 flex-1 flex-col justify-center gap-9 bg-ink p-[clamp(32px,5vw,72px)] text-white lg:flex"
     >
-      <p className="max-w-[460px] font-display text-[34px] leading-[1.12] font-bold tracking-[-0.02em]">
+      <p className="max-w-115 font-display text-[34px] leading-[1.12] font-bold tracking-[-0.02em]">
         Studeni je već otvoren. Svi računi čekaju na svom mjestu.
       </p>
 
-      <div className="max-w-[460px] rounded-[18px] bg-[#23262D] p-[22px]">
+      <div className="max-w-115 rounded-[18px] bg-[#23262D] p-5.5">
         <div className="flex items-baseline justify-between gap-3 font-mono text-[13px]">
           <span className="text-[#B9BCC4]">STUDENI 2026 · SVI PROFILI</span>
           <span className="text-lime">3 / 11 plaćeno</span>
@@ -44,7 +44,7 @@ export function MonthPreview() {
         <div className="mt-3.5 flex h-2 overflow-hidden rounded-full bg-ink-2">
           <span className="w-[27%] bg-lime" />
         </div>
-        <div className="mt-[18px] flex flex-col gap-1 text-sm">
+        <div className="mt-4.5 flex flex-col gap-1 text-sm">
           {SAMPLE_BILLS.map((bill, i) => (
             <div
               key={bill.name}

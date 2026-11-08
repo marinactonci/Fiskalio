@@ -90,6 +90,20 @@ function Dashboard({ model }: { model: Model }) {
     },
   ].filter((g) => g.items.length > 0);
 
+  const groupedByMonth = (items: Item[]) => {
+    const months = new Map<string, Item[]>();
+    for (const item of items) {
+      const monthItems = months.get(item.dueMonth) ?? [];
+      monthItems.push(item);
+      months.set(item.dueMonth, monthItems);
+    }
+    return Array.from(months, ([key, monthItems]) => ({
+      key,
+      label: monthLabel(monthItems[0].due),
+      items: monthItems,
+    }));
+  };
+
   const profileSplit = byProfile(thisMonth, model.profiles);
   const estimated = thisMonth.filter((i) => i.isEstimated && i.status !== "paid");
 
@@ -217,11 +231,16 @@ function Dashboard({ model }: { model: Model }) {
                 </span>
                 <span className="font-mono text-xs text-muted-foreground">{formatMoney(sum(g.items))}</span>
               </div>
-              <ul>
-                {g.items.map((i) => (
-                  <OpenRow key={i._id} item={i} today={today} onEdit={() => openInstance({ item: i })} />
-                ))}
-              </ul>
+              {groupedByMonth(g.items).map((month) => (
+                <div key={month.key}>
+                  <div className="px-5 pt-2.5 pb-1 text-xs font-semibold text-muted-foreground capitalize">{month.label}</div>
+                  <ul>
+                    {month.items.map((i) => (
+                      <OpenRow key={i._id} item={i} today={today} onEdit={() => openInstance({ item: i })} />
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           ))}
           {paidThisMonth.length > 0 && (

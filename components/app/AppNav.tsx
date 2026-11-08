@@ -49,9 +49,9 @@ function UserChip({ compact = false }: { compact?: boolean }) {
     "?";
   const avatar = user?.hasImage ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={user.imageUrl} alt="" className="size-[34px] rounded-full object-cover" />
+    <img src={user.imageUrl} alt="" className="size-8.5 rounded-full object-cover" />
   ) : (
-    <span className="grid size-[34px] place-items-center rounded-full bg-lime text-[13px] font-bold">
+    <span className="grid size-8.5 place-items-center rounded-full bg-lime text-[13px] font-bold">
       {initials}
     </span>
   );
@@ -106,7 +106,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col gap-6 overflow-y-auto border-r border-line px-3.5 py-5 lg:flex">
+    <aside className="sticky top-0 hidden h-dvh w-62 shrink-0 flex-col gap-6 overflow-y-auto border-r border-line px-3.5 py-5 lg:flex">
       <Logo href="/dashboard" className="px-2" />
 
       <button
@@ -134,7 +134,7 @@ export function Sidebar() {
                 active ? "bg-ink text-white" : "hover:bg-secondary",
               )}
             >
-              <Icon className="size-[17px]" aria-hidden />
+              <Icon className="size-4.25" aria-hidden />
               {label}
               {href === "/dashboard" && openCount ? (
                 <span className="ml-auto rounded-full bg-lime px-2 font-mono text-xs text-ink">
@@ -210,7 +210,7 @@ export function Sidebar() {
                   onClick={() => applyView(v.query)}
                   className="flex min-w-0 flex-1 items-center gap-2.5 px-2.5 py-2 text-left text-sm"
                 >
-                  <Filter className="size-[15px] shrink-0 text-muted-foreground" aria-hidden />
+                  <Filter className="size-3.75 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="truncate">{v.name}</span>
                 </button>
                 <button
@@ -284,7 +284,7 @@ export function MobileTabBar() {
           active ? "text-ink" : "text-muted-foreground",
         )}
       >
-        <Icon className="size-[22px]" strokeWidth={active ? 2.3 : 2} aria-hidden />
+        <Icon className="size-5.5" strokeWidth={active ? 2.3 : 2} aria-hidden />
         {label}
       </Link>
     );
@@ -302,9 +302,9 @@ export function MobileTabBar() {
           type="button"
           onClick={() => openInstance()}
           aria-label="Nova uplata"
-          className="-mt-7 grid size-[52px] place-items-center rounded-2xl bg-ink text-lime shadow-[0_8px_18px_rgba(21,23,28,0.25)]"
+          className="-mt-7 grid size-13 place-items-center rounded-2xl bg-ink text-lime shadow-[0_8px_18px_rgba(21,23,28,0.25)]"
         >
-          <Plus className="size-[22px]" strokeWidth={2.6} aria-hidden />
+          <Plus className="size-5.5" strokeWidth={2.6} aria-hidden />
         </button>
       </span>
       {tabs2.map((t) => (

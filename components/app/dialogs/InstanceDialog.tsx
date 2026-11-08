@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import type { Item, Model } from "@/lib/data";
+import { lastAmountFor, type Item, type Model } from "@/lib/data";
 import {
   addMonths,
   fullDate,
@@ -48,11 +48,8 @@ export interface InstanceDialogProps {
   /** …or create a new one with these defaults. */
   billId?: string;
   dueDate?: string;
-}
-
-function lastAmountFor(model: Model, billId: string): number | undefined {
-  const hist = model.items.filter((i) => i.bill._id === billId);
-  return hist.length ? hist[hist.length - 1].amount : undefined;
+  /** Amount to start with instead of the stored/last one (typed in a quick panel). */
+  amount?: number;
 }
 
 /** Generated note for a "yyyy-MM" period key ("" if the key is invalid). */
@@ -68,6 +65,7 @@ export function InstanceDialog({
   item,
   billId: defaultBillId,
   dueDate: defaultDue,
+  amount: amountOverride,
 }: InstanceDialogProps) {
   const isEdit = !!item;
   const create = useMutation(api.billInstances.createBillInstance);
@@ -80,7 +78,8 @@ export function InstanceDialog({
   const initialPeriod = item?.period
     ? toMonthKey(item.period)
     : toMonthKey(addMonths(parseISODate(initialDue), -1));
-  const prefill = item?.amount ?? (initialBill ? lastAmountFor(model, initialBill) : undefined);
+  const prefill =
+    amountOverride ?? item?.amount ?? (initialBill ? lastAmountFor(model.items, initialBill) : undefined);
   // Older instances may be paid without a recorded date.
   const legacyPaid = !!item?.isPaid && !item?.paidAt;
 
@@ -103,7 +102,7 @@ export function InstanceDialog({
   const onBillChange = (id: string) => {
     setBillId(id);
     if (!isEdit && !amount) {
-      const last = lastAmountFor(model, id);
+      const last = lastAmountFor(model.items, id);
       if (last !== undefined) setAmount(amountToInput(last));
     }
   };

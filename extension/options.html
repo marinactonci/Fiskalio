@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="hr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fiskalio – postavke</title>
+    <link rel="icon" href="icons/icon-32.png" />
+    <style>
+      :root {
+        --paper: #f1f1ec;
+        --ink: #15171c;
+        --ink-2: #3a3f47;
+        --muted: #555a63;
+        --card: #ffffff;
+        --line: #dcddd4;
+        --input: #cfd1c6;
+        --secondary: #e4e5dd;
+        --late: #9a3412;
+        --late-bg: #fdebdd;
+        --late-border: #f6cba8;
+        --ok-bg: #eef7c9;
+        --ok-border: #c9e27a;
+        --ring: rgba(21, 23, 28, 0.55);
+        color-scheme: light;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      main {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+      }
+      .head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 4px;
+      }
+      .head img {
+        width: 32px;
+        height: 32px;
+        flex: none;
+      }
+      h1 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.3;
+        font-weight: 650;
+      }
+      .lead {
+        margin: 0 0 20px;
+        color: var(--muted);
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      input {
+        display: block;
+        width: 100%;
+        height: 44px;
+        padding: 0 14px;
+        border: 1px solid var(--input);
+        border-radius: 12px;
+        background: var(--card);
+        color: var(--ink);
+        font: inherit;
+      }
+      input:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+      }
+      input[aria-invalid="true"] {
+        border-color: var(--late);
+      }
+      .hint {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 14px 0 20px;
+      }
+      button {
+        height: 44px;
+        padding: 0 16px;
+        border-radius: 12px;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .secondary {
+        flex: 1 1 180px;
+        background: var(--card);
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+      .secondary:hover {
+        background: var(--secondary);
+      }
+      .primary {
+        width: 100%;
+        background: var(--ink);
+        color: #ffffff;
+        border: 1px solid var(--ink);
+      }
+      .primary:hover {
+        background: var(--ink-2);
+      }
+      .msg {
+        margin: 12px 0 0;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        font-size: 14px;
+      }
+      .msg:empty {
+        display: none;
+      }
+      .msg.ok {
+        background: var(--ok-bg);
+        border-color: var(--ok-border);
+      }
+      .msg.error,
+      .msg.warn {
+        background: var(--late-bg);
+        border-color: var(--late-border);
+        color: #7c2d12;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="card">
+        <div class="head">
+          <img src="icons/icon-32.png" alt="" />
+          <h1>Fiskalio – nova kartica</h1>
+        </div>
+        <p class="lead">Odaberite koju verziju aplikacije nova kartica prikazuje.</p>
+
+        <label for="appUrl">Adresa aplikacije</label>
+        <input
+          type="url"
+          id="appUrl"
+          name="appUrl"
+          inputmode="url"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="https://fiskalio.marinactonci.com"
+          aria-describedby="appUrlHint"
+        />
+        <p class="hint" id="appUrlHint">Sprema se samo ishodište, npr. http://localhost:3000.</p>
+
+        <div class="presets">
+          <button type="button" class="secondary" data-url="https://fiskalio.marinactonci.com">
+            Objavljena aplikacija
+          </button>
+          <button type="button" class="secondary" data-url="http://localhost:3000">Lokalni razvoj</button>
+        </div>
+
+        <button type="button" class="primary" id="save">Spremi</button>
+
+        <div aria-live="polite">
+          <p class="msg" id="status"></p>
+        </div>
+      </div>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

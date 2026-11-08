@@ -1,10 +1,13 @@
 import type { FunctionReturnType } from "convex/server";
 import type { api } from "@/convex/_generated/api";
 import {
+  addDays,
+  monthLabel,
   parseBillingMonth,
   parseISODate,
   startOfDay,
   toMonthKey,
+  weekdayIndex,
 } from "@/lib/format";
 
 type OverviewResult = FunctionReturnType<typeof api.billInstances.getOverview>;
@@ -237,6 +240,66 @@ export function byProfile(items: Item[], profiles: OProfile[]) {
 /** Instances of a bill ordered oldest → newest by due date. */
 export function billHistory(items: Item[], billId: string): Item[] {
   return items.filter((i) => i.bill._id === billId);
+}
+
+/** Amount of the bill's latest instance, used to prefill a new one. */
+export function lastAmountFor(items: Item[], billId: string): number | undefined {
+  const hist = billHistory(items, billId);
+  return hist.length ? hist[hist.length - 1].amount : undefined;
+}
+
+/* ------------------------------------------------------------------ */
+/* Open items ("Na redu")                                              */
+/* ------------------------------------------------------------------ */
+
+/** Unpaid items to act on: everything late plus what is due by month end + 14 days. */
+export function openItems(items: Item[], today: Date): Item[] {
+  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  const limit = addDays(monthEnd, 14);
+  return items.filter((i) => i.status !== "paid" && i.due <= limit);
+}
+
+export interface OpenGroup {
+  key: "late" | "thisWeek" | "nextWeek" | "later";
+  title: string;
+  tone?: "late";
+  items: Item[];
+}
+
+/** Late, this week (to Sunday), next week, later. Empty groups are dropped. */
+export function groupOpenItems(open: Item[], today: Date): OpenGroup[] {
+  const weekEnd = addDays(today, 6 - weekdayIndex(today));
+  const nextWeekEnd = addDays(weekEnd, 7);
+  const groups: OpenGroup[] = [
+    { key: "late", title: "Kasni", tone: "late", items: open.filter((i) => i.status === "late") },
+    {
+      key: "thisWeek",
+      title: "Ovaj tjedan",
+      items: open.filter((i) => i.status === "due" && i.due <= weekEnd),
+    },
+    {
+      key: "nextWeek",
+      title: "Sljedeći tjedan",
+      items: open.filter((i) => i.status === "due" && i.due > weekEnd && i.due <= nextWeekEnd),
+    },
+    {
+      key: "later",
+      title: "Kasnije",
+      items: open.filter((i) => i.status === "due" && i.due > nextWeekEnd),
+    },
+  ];
+  return groups.filter((g) => g.items.length > 0);
+}
+
+/** Splits items by due month in order of appearance: "listopad 2026", "studeni 2026". */
+export function groupByDueMonth(items: Item[]): { key: string; label: string; items: Item[] }[] {
+  const months = new Map<string, Item[]>();
+  for (const item of items) {
+    const list = months.get(item.dueMonth) ?? [];
+    list.push(item);
+    months.set(item.dueMonth, list);
+  }
+  return Array.from(months, ([key, list]) => ({ key, label: monthLabel(list[0].due), items: list }));
 }
 
 /** Change of the latest instance vs the one before it, per bill. */

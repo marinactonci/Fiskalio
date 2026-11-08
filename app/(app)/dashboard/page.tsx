@@ -20,15 +20,17 @@ import { useFilters } from "@/hooks/use-filters";
 import { useModel } from "@/hooks/use-model";
 import {
   byProfile,
+  groupByDueMonth,
+  groupOpenItems,
   inScope,
   lastChange,
+  openItems,
   sum,
   totals,
   type Item,
   type Model,
 } from "@/lib/data";
 import {
-  addDays,
   addMonths,
   formatMoney,
   formatPercent,
@@ -39,7 +41,6 @@ import {
   relativeDue,
   shortDate,
   toMonthKey,
-  weekdayIndex,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -71,38 +72,8 @@ function Dashboard({ model }: { model: Model }) {
   const allLate = scoped.filter((i) => i.status === "late");
   const lateSum = sum(allLate);
   const prevTotal = sum(scoped.filter((i) => i.dueMonth === prevKey));
-  const open = scoped.filter((i) => i.status !== "paid" && i.due <= addDays(monthEnd, 14));
   const paidThisMonth = thisMonth.filter((i) => i.status === "paid");
-
-  // Group open items.
-  const weekEnd = addDays(today, 6 - weekdayIndex(today));
-  const nextWeekEnd = addDays(weekEnd, 7);
-  const groups: { title: string; tone?: "late"; items: Item[] }[] = [
-    { title: "Kasni", tone: "late" as const, items: open.filter((i) => i.status === "late") },
-    { title: "Ovaj tjedan", items: open.filter((i) => i.status === "due" && i.due <= weekEnd) },
-    {
-      title: "Sljedeći tjedan",
-      items: open.filter((i) => i.status === "due" && i.due > weekEnd && i.due <= nextWeekEnd),
-    },
-    {
-      title: `Kasnije`,
-      items: open.filter((i) => i.status === "due" && i.due > nextWeekEnd),
-    },
-  ].filter((g) => g.items.length > 0);
-
-  const groupedByMonth = (items: Item[]) => {
-    const months = new Map<string, Item[]>();
-    for (const item of items) {
-      const monthItems = months.get(item.dueMonth) ?? [];
-      monthItems.push(item);
-      months.set(item.dueMonth, monthItems);
-    }
-    return Array.from(months, ([key, monthItems]) => ({
-      key,
-      label: monthLabel(monthItems[0].due),
-      items: monthItems,
-    }));
-  };
+  const groups = groupOpenItems(openItems(scoped, today), today);
 
   const profileSplit = byProfile(thisMonth, model.profiles);
   const estimated = thisMonth.filter((i) => i.isEstimated && i.status !== "paid");
@@ -224,7 +195,7 @@ function Dashboard({ model }: { model: Model }) {
             </p>
           )}
           {groups.map((g) => (
-            <div key={g.title}>
+            <div key={g.key}>
               <div className="flex items-baseline gap-2.5 px-5 pt-3.5 pb-1.5">
                 <span className={cn("text-xs font-bold tracking-wider uppercase", g.tone === "late" ? "text-late" : "text-ink")}>
                   {g.title}
@@ -232,7 +203,7 @@ function Dashboard({ model }: { model: Model }) {
                 <span className="font-mono text-xs text-muted-foreground">{formatMoney(sum(g.items))}</span>
               </div>
               {g.tone === "late" && new Set(g.items.map((i) => i.dueMonth)).size > 1 ? (
-                groupedByMonth(g.items).map((month) => (
+                groupByDueMonth(g.items).map((month) => (
                   <div key={month.key}>
                     <div className="px-5 pt-2.5 pb-1 text-xs font-semibold text-muted-foreground capitalize">{month.label}</div>
                     <ul>

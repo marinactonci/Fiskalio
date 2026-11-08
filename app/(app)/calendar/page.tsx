@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -15,6 +15,7 @@ import {
   StatusPill,
 } from "@/components/app/bits";
 import { FilterBar } from "@/components/app/FilterBar";
+import { MonthGrid } from "@/components/app/MonthGrid";
 import { useFilters } from "@/hooks/use-filters";
 import { useModel } from "@/hooks/use-model";
 import {
@@ -29,8 +30,6 @@ import {
 import {
   addDays,
   addMonths,
-  dayMonth,
-  formatAmount,
   formatMoney,
   formatPercent,
   monthLabel,
@@ -44,20 +43,11 @@ import {
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const WEEKDAYS = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
-
 export default function CalendarPage() {
   const state = useModel();
   if (state.status === "loading") return <LoadingState />;
   if (state.status === "error") return <ErrorState error={state.error} />;
   return <CalendarView model={state.model} />;
-}
-
-function itemTone(i: Item) {
-  if (i.status === "late")
-    return "border-late-border bg-late-bg text-late-strong font-semibold";
-  if (i.status === "paid") return "border-paid-bg bg-paid-bg text-muted-foreground";
-  return "border-line bg-card text-ink";
 }
 
 function CalendarView({ model }: { model: Model }) {
@@ -219,103 +209,15 @@ function CalendarView({ model }: { model: Model }) {
       <div className="flex flex-wrap items-start gap-4">
         <div className="min-w-0 flex-[999_1_620px]">
           {view === "month" ? (
-            <Card className="overflow-hidden">
-              <div className="grid grid-cols-7 border-b border-line bg-[#FAFAF7]">
-                {WEEKDAYS.map((w) => (
-                  <div key={w} className="px-1.5 py-2.5 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase md:px-2.5 md:text-left">
-                    {w}
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-7">
-                {Array.from({ length: weeks * 7 }, (_, idx) => {
-                  const d = addDays(gridStart, idx);
-                  const iso = toISODate(d);
-                  const inMonth = d.getMonth() === month.getMonth();
-                  const isToday = d.getTime() === today.getTime();
-                  const items = inMonth ? byDate.get(iso) ?? [] : [];
-                  const daySum = sum(items);
-                  const weekend = idx % 7 >= 5;
-                  const selected = selectedDay === iso;
-                  return (
-                    <div
-                      key={iso}
-                      className={cn(
-                        "group relative flex min-h-16 min-w-0 flex-col gap-1 border-r border-b border-line-soft p-1 md:min-h-29.5 md:p-1.5",
-                        !inMonth ? "bg-[#F4F4EF]" : weekend ? "bg-[#FAFAF7]" : "bg-card",
-                        (idx + 1) % 7 === 0 && "border-r-0",
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <button
-                          type="button"
-                          disabled={!inMonth}
-                          onClick={() => setSelectedDay(selected ? null : iso)}
-                          aria-label={`${shortDate(d)}${items.length ? `, ${items.length} ${plural(items.length, "uplata", "uplate", "uplata")}` : ""}`}
-                          className={cn(
-                            "grid h-7 min-w-7 place-items-center rounded-full px-1 text-[13px] md:pointer-events-none",
-                            isToday ? "bg-lime font-bold" : "font-medium",
-                            !inMonth && "text-[#6B707A]",
-                            selected && "ring-2 ring-ink",
-                          )}
-                        >
-                          {d.getDate()}
-                        </button>
-                        {items.length > 1 && (
-                          <span className="hidden font-mono text-[11px] text-muted-foreground md:inline">
-                            {formatAmount(daySum)}
-                          </span>
-                        )}
-                        {inMonth && (
-                          <button
-                            type="button"
-                            onClick={() => openInstance({ dueDate: iso })}
-                            aria-label={`Dodaj uplatu za ${dayMonth(d)}`}
-                            className="absolute right-1 bottom-1 hidden size-7 place-items-center rounded-lg text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-secondary hover:text-ink focus-visible:opacity-100 md:grid"
-                          >
-                            <Plus className="size-4" aria-hidden />
-                          </button>
-                        )}
-                      </div>
-                      {/* chips (tablet/desktop) */}
-                      <div className="hidden flex-col gap-1 md:flex">
-                        {items.map((i) => (
-                          <button
-                            key={i._id}
-                            type="button"
-                            onClick={() => openInstance({ item: i })}
-                            title={`${i.bill.name} · ${i.profile.name} · ${formatMoney(i.amount)}`}
-                            className={cn(
-                              "flex min-w-0 items-center gap-1 rounded-md border border-l-[3px] px-1.5 py-1 text-left text-xs hover:brightness-[0.97]",
-                              itemTone(i),
-                            )}
-                            style={{ borderLeftColor: i.profile.color }}
-                          >
-                            {i.status === "paid" && <Check className="size-3 shrink-0" strokeWidth={3} aria-hidden />}
-                            <span className={cn("truncate", i.status === "paid" && "line-through")}>{i.bill.name}</span>
-                            <span className={cn("ml-auto font-mono text-[11px]", i.status === "paid" && "line-through")}>
-                              {formatAmount(i.amount)}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                      {/* dots (phone) */}
-                      {items.length > 0 && (
-                        <div className="flex flex-wrap gap-0.5 md:hidden" aria-hidden>
-                          {items.slice(0, 4).map((i) => (
-                            <span
-                              key={i._id}
-                              className={cn("size-2 rounded-full", i.status === "paid" && "opacity-35")}
-                              style={{ backgroundColor: i.status === "late" ? "#C2410C" : i.profile.color }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
+            <MonthGrid
+              month={month}
+              today={today}
+              items={visible}
+              onOpenItem={(i) => openInstance({ item: i })}
+              onAddDay={(iso) => openInstance({ dueDate: iso })}
+              selectedDay={selectedDay}
+              onSelectDay={setSelectedDay}
+            />
           ) : (
             <ListView items={visible} onOpen={(i) => openInstance({ item: i })} />
           )}

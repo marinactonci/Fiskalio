@@ -2,6 +2,7 @@
 
 import { useMutation } from "convex/react";
 import { Check, ExternalLink } from "lucide-react";
+import { useCallback } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { InstanceStatus, Item } from "@/lib/data";
@@ -96,20 +97,31 @@ export function EBillLink({ href, name, className }: { href?: string; name: stri
   );
 }
 
+/** Flips an instance between paid and unpaid, with an undo toast. */
+export function useTogglePaid() {
+  const setPaid = useMutation(api.billInstances.setPaid);
+  return useCallback(
+    async (item: Item) => {
+      const paid = item.isPaid;
+      const res = await setPaid({ id: item._id, isPaid: !paid });
+      if (!res.success) {
+        toast.error(res.error || "Promjena nije uspjela.");
+        return;
+      }
+      const label = `${item.bill.name} (${item.profile.name})`;
+      toast.success(paid ? `Vraćeno na neplaćeno: ${label}` : `Plaćeno: ${label}`, {
+        action: { label: "Poništi", onClick: () => void setPaid({ id: item._id, isPaid: paid }) },
+      });
+    },
+    [setPaid],
+  );
+}
+
 /** Round "mark as paid" toggle with undo. */
 export function PaidToggle({ item, size = "md" }: { item: Item; size?: "sm" | "md" }) {
-  const setPaid = useMutation(api.billInstances.setPaid);
+  const togglePaid = useTogglePaid();
   const paid = item.isPaid;
-  const toggle = async () => {
-    const res = await setPaid({ id: item._id, isPaid: !paid });
-    if (!res.success) {
-      toast.error(res.error || "Promjena nije uspjela.");
-      return;
-    }
-    toast.success(paid ? `${item.bill.name}: vraćeno na neplaćeno` : `${item.bill.name} je plaćen`, {
-      action: { label: "Poništi", onClick: () => void setPaid({ id: item._id, isPaid: paid }) },
-    });
-  };
+  const toggle = () => void togglePaid(item);
   const dim = size === "sm" ? "size-[22px]" : "size-[26px]";
   return (
     <button

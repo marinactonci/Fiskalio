@@ -11,12 +11,12 @@ import { ProfileDialog } from "@/components/app/dialogs/ProfileDialog";
 
 type DialogState =
   | { kind: "none" }
-  | { kind: "instance"; item?: Item; billId?: string; dueDate?: string }
+  | { kind: "instance"; item?: Item; billId?: string; dueDate?: string; amount?: number }
   | { kind: "bill"; billId?: string; profileId?: string }
   | { kind: "profile"; profileId?: string };
 
 interface Actions {
-  openInstance: (opts?: { item?: Item; billId?: string; dueDate?: string }) => void;
+  openInstance: (opts?: { item?: Item; billId?: string; dueDate?: string; amount?: number }) => void;
   openBill: (opts?: { billId?: string; profileId?: string }) => void;
   openProfile: (opts?: { profileId?: string }) => void;
   openPalette: () => void;
@@ -77,6 +77,7 @@ export function AppActionsProvider({ children }: { children: React.ReactNode }) 
           item={dialog.item}
           billId={dialog.billId}
           dueDate={dialog.dueDate}
+          amount={dialog.amount}
         />
       )}
       {model && dialog.kind === "bill" && (
